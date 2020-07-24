@@ -117,20 +117,20 @@ namespace CpuInfoClient
                         //Excluimos los discos
                         if (d.DriveType != DriveType.Fixed)
                             continue;
-
-                        wListDisk.Append(string.Format("Disco: {0}", d.Name));
                         if (d.IsReady == true)
                         {
-                            wListDisk.Append(" ");
+                            wListDisk.Append("<ul>");
+                            wListDisk.Append(string.Format("{0}", d.Name));
+                            wListDisk.Append(" - ");
                             wListDisk.Append(string.Format("Etiqueta de Volumen: {0}", d.VolumeLabel));
                             wListDisk.Append(" - ");
                             wListDisk.Append(string.Format("Sistema de Archivos: {0}", d.DriveFormat));
                             wListDisk.Append(" - ");
-                            wListDisk.Append(string.Format("Espacio Disponible: {0, 15} GB", (((d.TotalFreeSpace / 1024) / 1024) / 1024)));
+                            wListDisk.Append(string.Format("Espacio Disponible: {0} GB", (((d.TotalFreeSpace / 1024) / 1024) / 1024)));
                             wListDisk.Append(" - ");
-                            wListDisk.Append(string.Format("Espacio Total en Disco: {0, 15} GB ", (((d.TotalSize / 1024) / 1024) / 1024)));
+                            wListDisk.Append(string.Format("Espacio Total en Disco: {0} GB ", (((d.TotalSize / 1024) / 1024) / 1024)));
+                            wListDisk.Append("</ul>");
                         }
-                        wListDisk.AppendLine();
                     }
                     #endregion
                     #region Sistema Operativo
@@ -216,9 +216,11 @@ namespace CpuInfoClient
             ManagementObjectSearcher MOS = new ManagementObjectSearcher("SELECT * FROM Win32_Processor");
             foreach (ManagementObject MO in MOS.Get())
             {
-                wText.Append(string.Format("Nombre de Procesador: {0} - ", MO["Name"]));
+                wText.Append("<ul>");
+                wText.Append(string.Format("Nombre: {0}", MO["Name"]));
                 wText.Append(string.Format("Número de Cores: {0} - ", MO["NumberOfCores"]));
                 wText.Append(string.Format("Número de Procesadores Lógicos: {0}", MO["NumberOfLogicalProcessors"]));
+                wText.Append("</ul>");
             }
             return wText.ToString();
         }
@@ -239,12 +241,13 @@ namespace CpuInfoClient
                     //if (!itService.Status.Equals(ServiceControllerStatus.Running))
                     //    continue;
 
-                    /*
-                    if (!itService.ServiceName.ToLower().Contains("epiron"))
-                        continue;
-                    if(itService.ServiceName.ToLower().Contains("sql"))
-                        continue;
-                    */
+                    if (!Environment.MachineName.Equals("GUSTAVO-ASUS-UX"))
+                    {
+                        if (!itService.ServiceName.ToLower().Contains("epiron"))
+                            continue;
+                        if (itService.ServiceName.ToLower().Contains("sql"))
+                            continue;
+                    }
 
                     wService = new ServiceBE();
                     wService.machineName = System.Environment.MachineName;
@@ -252,7 +255,7 @@ namespace CpuInfoClient
                     wService.serviceDisplayName = itService.DisplayName;
                     wService.serviceType = itService.ServiceType.ToString();
                     wService.status = itService.Status.ToString();
-                    
+
                     var obj = Environment.Version;
                     //Detectamos si el framework es 4.6 o Superior
                     if (obj.Major == 4 && obj.MajorRevision == 0 && obj.Build == 30319 && obj.Revision >= 42000)
@@ -281,6 +284,7 @@ namespace CpuInfoClient
                                     {
                                         auxPath = auxPath.Substring(0, wIndex - 1);
                                         wService.serviceVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(auxPath).FileVersion;
+                                        wService.Path = auxPath;
                                     }
                                     else
                                     {
@@ -289,6 +293,7 @@ namespace CpuInfoClient
                                         {
                                             auxPath = auxPath.Substring(0, wIndex);
                                             wService.serviceVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(auxPath).FileVersion;
+                                            wService.Path = auxPath;
                                         }
                                         else
                                         {
@@ -297,11 +302,14 @@ namespace CpuInfoClient
                                             {
                                                 auxPath = auxPath.Substring(0, wIndex + 4);
                                                 wService.serviceVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(auxPath).FileVersion;
+                                                wService.Path = auxPath;
                                             }
                                             else
                                             {
                                                 if (File.Exists(wService.Path))
-                                                { wService.serviceVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(wService.Path).FileVersion; }
+                                                {
+                                                    wService.serviceVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(wService.Path).FileVersion;
+                                                }
                                                 else
                                                 {
                                                     wService.serviceVersion = "No existe la ruta " + wService.Path;
@@ -323,35 +331,57 @@ namespace CpuInfoClient
                     //Buscamos todos los archivos dlls y exe en el folder path
                     if (wService.serviceVersion != "N/A")
                     {
-                        string wDirectory = Path.GetDirectoryName(wService.Path);
-                        StringBuilder sb = new StringBuilder();
-                        try
-                        {
-                            if (!string.IsNullOrEmpty(wDirectory))
-                            {
-                                //Buscamos todos los archivos del directorio
-                                DirectoryInfo di = new DirectoryInfo(wDirectory);
-                                foreach (var file in di.GetFiles())
-                                {
-                                    if (!((file.Extension == ".dll") || (file.Extension == ".exe")))
-                                        continue;
-                                    sb.AppendLine(file.FullName + " - Versión: " + System.Diagnostics.FileVersionInfo.GetVersionInfo(file.FullName).FileVersion);
-                                }
-                                wService.filesVersion = sb.ToString();
-                            }
-                            else
-                            {
-                                wService.filesVersion = "N/A";
-                            }
 
-                        }
-                        catch (Exception ex)
+                        string wDirectory = Path.GetDirectoryName(wService.Path);
+                        if (!Directory.Exists(wDirectory))
                         {
-                            Console.WriteLine(wDirectory + " - " + ex.Message);
+                            wService.filesVersion = "N/A";
                         }
+                        else
+                        {
+                            StringBuilder sb = new StringBuilder();
+                            try
+                            {
+                                if (!string.IsNullOrEmpty(wDirectory))
+                                {
+                                    //Buscamos todos los archivos del directorio
+                                    DirectoryInfo di = new DirectoryInfo(wDirectory);
+                                    foreach (var file in di.GetFiles())
+                                    {
+                                        if (!((file.Extension == ".dll") || (file.Extension == ".exe")))
+                                            continue;
+                                        if (file.Name.ToLower() == (ConfigurationManager.AppSettings["DllDefault"].ToString().ToLower()) || file.Name.ToLower() == (ConfigurationManager.AppSettings["DllAQDefault"].ToString().ToLower()))
+                                        {
+                                            wService.serviceVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(file.FullName).FileVersion;
+                                            wService.Path = file.FullName;
+                                        }
+
+                                        sb.Append("<ul>");
+                                        sb.AppendLine(file.FullName + " - Versión: " + System.Diagnostics.FileVersionInfo.GetVersionInfo(file.FullName).FileVersion);
+                                        sb.Append("</ul>");
+                                    }
+                                    wService.filesVersion = sb.ToString();
+                                    if (string.IsNullOrEmpty(wService.filesVersion))
+                                        wService.filesVersion = "N/A";
+                                }
+                                else
+                                {
+                                    wService.filesVersion = "N/A";
+                                }
+
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine(wDirectory + " - " + ex.Message);
+                            }
+                        }
+
 
                     }
-
+                    else
+                    {
+                        wService.filesVersion = "N/A";
+                    }
 
                     wServiceList.Add(wService);
                     cont++;

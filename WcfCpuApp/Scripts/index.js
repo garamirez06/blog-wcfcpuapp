@@ -24,6 +24,7 @@
 
     // Add a handler to receive updates from the server
     hub.client.cpuInfoMessage = function (machineName, cpu, memUsage, memTotal, services, ips, disk, sysos, procesador, filesVersion) {
+        disk = disk.replace("\r\n", "<br>", "g");
         var machine = {
             machineName: machineName,
             cpu: cpu.toFixed(0),
