@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -72,7 +73,7 @@ namespace CpuInfoClient
             while (_running)
             {
                 // Poll every second
-                if ((DateTime.Now - lastPollTime).TotalMilliseconds >= 1000)
+                if ((DateTime.Now - lastPollTime).TotalMilliseconds >= 60000)
                 {
                     double cpuTime;
                     ulong memUsage, totalMemory;
@@ -112,6 +113,14 @@ namespace CpuInfoClient
 
                     DriveInfo[] allDrives = DriveInfo.GetDrives();
                     StringBuilder wListDisk = new StringBuilder();
+                    if (DriveInfo.GetDrives().Length > 0)
+                    {
+
+                        wListDisk.Append("<button type=\"button\" class=\"collapsible\"  onclick=\"collapse()\">Ver Discos</button>");
+                        wListDisk.Append("<div id=\"collapseDisk\" class=\"content\">");
+                        wListDisk.Append("<ul class=\"list-group\">");
+                    }
+
                     foreach (DriveInfo d in allDrives)
                     {
                         //Excluimos los discos
@@ -119,7 +128,7 @@ namespace CpuInfoClient
                             continue;
                         if (d.IsReady == true)
                         {
-                            wListDisk.Append("<ul>");
+                            wListDisk.Append("<li class=\"list-group-item\">");
                             wListDisk.Append(string.Format("{0}", d.Name));
                             wListDisk.Append(" - ");
                             wListDisk.Append(string.Format("Etiqueta de Volumen: {0}", d.VolumeLabel));
@@ -129,9 +138,15 @@ namespace CpuInfoClient
                             wListDisk.Append(string.Format("Espacio Disponible: {0} GB", (((d.TotalFreeSpace / 1024) / 1024) / 1024)));
                             wListDisk.Append(" - ");
                             wListDisk.Append(string.Format("Espacio Total en Disco: {0} GB ", (((d.TotalSize / 1024) / 1024) / 1024)));
-                            wListDisk.Append("</ul>");
+                            wListDisk.Append("</li>");
                         }
                     }
+                    if (DriveInfo.GetDrives().Length > 0)
+                    {
+                        wListDisk.Append("</ul>");
+                        wListDisk.Append("</div>");
+                    }
+
                     #endregion
                     #region Sistema Operativo
                     string wNameOS = new ComputerInfo().OSFullName;
@@ -173,7 +188,8 @@ namespace CpuInfoClient
 
                         var client = new WebClient();
                         client.Headers.Add("Content-Type", "application/json");
-                        client.UploadString(serverUrl, json);
+                        var response = client.UploadString(serverUrl, json);
+                        Console.WriteLine(DateTime.Now.ToString() + " - Resultado: OK");
                     }
                     catch (Exception ex)
                     {
@@ -216,11 +232,11 @@ namespace CpuInfoClient
             ManagementObjectSearcher MOS = new ManagementObjectSearcher("SELECT * FROM Win32_Processor");
             foreach (ManagementObject MO in MOS.Get())
             {
-                wText.Append("<ul>");
+                wText.Append("<li>");
                 wText.Append(string.Format("Nombre: {0}", MO["Name"]));
                 wText.Append(string.Format("Número de Cores: {0} - ", MO["NumberOfCores"]));
                 wText.Append(string.Format("Número de Procesadores Lógicos: {0}", MO["NumberOfLogicalProcessors"]));
-                wText.Append("</ul>");
+                wText.Append("</li>");
             }
             return wText.ToString();
         }
@@ -346,6 +362,12 @@ namespace CpuInfoClient
                                 {
                                     //Buscamos todos los archivos del directorio
                                     DirectoryInfo di = new DirectoryInfo(wDirectory);
+                                    if(di.GetFiles() != null && di.GetFiles().Length > 0)
+                                    {
+                                        sb.Append("<button type=\"button\" class=\"collapsible\"  onclick=\"collapse()\">Ver Archivos</button>");
+                                        sb.Append("<div id=\"collapseServices\" class=\"content\">");
+                                        sb.Append("<ul class=\"list-group\">");
+                                    }
                                     foreach (var file in di.GetFiles())
                                     {
                                         if (!((file.Extension == ".dll") || (file.Extension == ".exe")))
@@ -356,10 +378,16 @@ namespace CpuInfoClient
                                             wService.Path = file.FullName;
                                         }
 
-                                        sb.Append("<ul>");
+                                        sb.Append("<li>");
                                         sb.AppendLine(file.FullName + " - Versión: " + System.Diagnostics.FileVersionInfo.GetVersionInfo(file.FullName).FileVersion);
-                                        sb.Append("</ul>");
+                                        sb.Append("</li>");
                                     }
+                                    if (di.GetFiles() != null && di.GetFiles().Length > 0)
+                                    {
+                                        sb.Append("</ul>");
+                                        sb.Append("</div>");
+                                    }
+
                                     wService.filesVersion = sb.ToString();
                                     if (string.IsNullOrEmpty(wService.filesVersion))
                                         wService.filesVersion = "N/A";
