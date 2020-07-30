@@ -13,5 +13,6 @@ namespace WcfCpuApp.Models
         public string Sysos { get; set; }
         public string Processador { get; set; }
         public string filesVersion { get; set; }
+        public string connectionID { get; set; }
     }
 }

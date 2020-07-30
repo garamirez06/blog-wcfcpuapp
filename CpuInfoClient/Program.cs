@@ -3,16 +3,19 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Management;
 using System.Net;
+using System.Net.Configuration;
 using System.Net.Sockets;
 using System.ServiceModel.Channels;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNet.SignalR.Client;
 using Microsoft.VisualBasic.Devices;
 using Microsoft.Win32;
 using Newtonsoft.Json;
@@ -23,7 +26,23 @@ namespace CpuInfoClient
     {
         static bool _running = true;
         static PerformanceCounter _cpuCounter, _memUsageCounter;
+        static string wConnectionID = string.Empty;
 
+
+        private static bool startService(string wNameService)
+        {
+            bool wRes = false;
+            foreach (var wService in ServiceController.GetServices().OrderBy(p => p.DisplayName))
+            {
+                if (wService.ServiceName.ToLower().Equals(wNameService.ToLower()))
+                {
+                    wService.Start();
+                    wRes = true;
+                }
+
+            }
+            return wRes;
+        }
         static void Main(string[] args)
         {
             Thread pollingThread = null;
@@ -33,14 +52,47 @@ namespace CpuInfoClient
 
             try
             {
+                //Creamos hilo de Escucha
+                HubConnection hubConnection;
+                IHubProxy hubProxy;
+                var serverUrlTest = new Uri(ConfigurationManager.AppSettings["ServerUrlBase"] + "signalr/hubs");
+
+                hubConnection = new HubConnection(serverUrlTest.ToString());
+                hubConnection.Headers.Add("HostClient", Environment.MachineName);
+                hubProxy = hubConnection.CreateHubProxy("CpuInfo");
+                hubProxy.On<string>("Connect", (message) => Console.WriteLine(message));
+                hubProxy.On<string>("SendMessageWelcome", (message) => Console.WriteLine(message));
+                hubProxy.On<string>("SendMessage", (message) => Console.WriteLine(message));
+                hubProxy.On<string>("SendMessageStart", (message) => startService(message));
+                hubConnection.Start().Wait();
+                wConnectionID = hubConnection.ConnectionId;
+                Console.WriteLine("Cliente: " + wConnectionID);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
+
+            try
+            {
+                
+                // Sets the culture to French (France)
+                //Thread.CurrentThread.CurrentCulture = new CultureInfo("fr-FR");
+                // Sets the UI culture to French (France)
+                //Thread.CurrentThread.CurrentUICulture = new CultureInfo("fr-FR");
+                //en-US
+                Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+                Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
+                Console.WriteLine("1");
                 _cpuCounter = new PerformanceCounter();
                 _cpuCounter.CategoryName = "Processor";
                 _cpuCounter.CounterName = "% Processor Time";
                 _cpuCounter.InstanceName = "_Total";
-
+                Console.WriteLine("2");
                 _memUsageCounter = new PerformanceCounter("Memory", "Available KBytes");
-
                 // Create a new thread to start polling and sending the data
+                Console.WriteLine("3");
                 pollingThread = new Thread(new ParameterizedThreadStart(RunPollingThread));
                 pollingThread.Start();
 
@@ -64,6 +116,7 @@ namespace CpuInfoClient
 
         static void RunPollingThread(object data)
         {
+            Console.WriteLine("4");
             // Convert the object that was passed in
             DateTime lastPollTime = DateTime.MinValue;
 
@@ -73,11 +126,11 @@ namespace CpuInfoClient
             while (_running)
             {
                 // Poll every second
-                if ((DateTime.Now - lastPollTime).TotalMilliseconds >= 60000)
+                if ((DateTime.Now - lastPollTime).TotalMilliseconds >= 1000)
                 {
                     double cpuTime;
                     ulong memUsage, totalMemory;
-
+                    Console.WriteLine("5");
                     // Get the stuff we need to send
                     GetMetrics(out cpuTime, out memUsage, out totalMemory);
                     #region Direcciones IP
@@ -95,9 +148,12 @@ namespace CpuInfoClient
                             }
                         }
                     }
+                    Console.WriteLine("6");
                     #endregion
                     #region Servicios
+                    Console.WriteLine("7");
                     var services = JsonConvert.SerializeObject(GetAllServices());
+                    Console.WriteLine("8");
                     #endregion
                     #region Disco Duros
                     /*
@@ -116,7 +172,7 @@ namespace CpuInfoClient
                     if (DriveInfo.GetDrives().Length > 0)
                     {
 
-                        wListDisk.Append("<button type=\"button\" class=\"collapsible\"  onclick=\"collapse()\">Ver Discos</button>");
+                        wListDisk.Append("<button type=\"button\" class=\"btn btn-info collapsible\"  onclick=\"collapse()\">+</button>");
                         wListDisk.Append("<div id=\"collapseDisk\" class=\"content\">");
                         wListDisk.Append("<ul class=\"list-group\">");
                     }
@@ -188,8 +244,10 @@ namespace CpuInfoClient
 
                         var client = new WebClient();
                         client.Headers.Add("Content-Type", "application/json");
+                        client.Headers.Add("HostClient", Environment.MachineName);
+                        //client.Headers.Add("ClientConnectionID", wConnectionID);
                         var response = client.UploadString(serverUrl, json);
-                        Console.WriteLine(DateTime.Now.ToString() + " - Resultado: OK");
+                        Console.WriteLine(DateTime.Now.ToString() + " - URL: " + serverUrl + " - Resultado: OK");
                     }
                     catch (Exception ex)
                     {
@@ -237,10 +295,11 @@ namespace CpuInfoClient
                 wText.Append(string.Format("Número de Cores: {0} - ", MO["NumberOfCores"]));
                 wText.Append(string.Format("Número de Procesadores Lógicos: {0}", MO["NumberOfLogicalProcessors"]));
                 wText.Append("</li>");
+                break;
             }
             return wText.ToString();
         }
-        public static List<ServiceBE> GetAllServices(string pServiceName = null, string pStatus = null)
+        public static List<ServiceBE> GetAllServices()
         {
             List<ServiceBE> wServiceList = new List<ServiceBE>();
             ServiceBE wService = new ServiceBE();
@@ -248,9 +307,10 @@ namespace CpuInfoClient
             int cont = 0;
             try
             {
+                //
+                Console.WriteLine("Inicio de la busquedas de servicios");
                 foreach (var itService in ServiceController.GetServices().OrderBy(p => p.DisplayName))
                 {
-
                     if (itService.ServiceType.ToString().Equals("Win32ShareProcess"))
                         continue;
 
@@ -275,7 +335,8 @@ namespace CpuInfoClient
                     var obj = Environment.Version;
                     //Detectamos si el framework es 4.6 o Superior
                     if (obj.Major == 4 && obj.MajorRevision == 0 && obj.Build == 30319 && obj.Revision >= 42000)
-                        wService.startType = itService.StartType.ToString();
+                        //wService.startType = itService.StartType.ToString();
+                        wService.startType = "N/A";
                     else
                         wService.startType = "N/A";
 
@@ -362,11 +423,13 @@ namespace CpuInfoClient
                                 {
                                     //Buscamos todos los archivos del directorio
                                     DirectoryInfo di = new DirectoryInfo(wDirectory);
-                                    if(di.GetFiles() != null && di.GetFiles().Length > 0)
+                                    if (di.GetFiles() != null && di.GetFiles().Length > 0)
                                     {
-                                        sb.Append("<button type=\"button\" class=\"collapsible\"  onclick=\"collapse()\">Ver Archivos</button>");
+                                        sb.Append("<button type=\"button\" class=\"btn btn-info collapsible\"  onclick=\"collapse()\">+</button>");
                                         sb.Append("<div id=\"collapseServices\" class=\"content\">");
-                                        sb.Append("<ul class=\"list-group\">");
+                                        sb.Append("<table class=\"table table-striped table-hover\">");
+                                        sb.Append("<thead><tr><th scope=\"col\"> Archivo </th><th scope=\"col\"> Versión</th></tr></thead>");
+                                        sb.Append("<tbody>");
                                     }
                                     foreach (var file in di.GetFiles())
                                     {
@@ -378,14 +441,16 @@ namespace CpuInfoClient
                                             wService.Path = file.FullName;
                                         }
 
-                                        sb.Append("<li>");
-                                        sb.AppendLine(file.FullName + " - Versión: " + System.Diagnostics.FileVersionInfo.GetVersionInfo(file.FullName).FileVersion);
-                                        sb.Append("</li>");
+                                        sb.Append("<tr>");
+                                        sb.AppendLine("<td>" + file.FullName + "</td><td>" + System.Diagnostics.FileVersionInfo.GetVersionInfo(file.FullName).FileVersion + "</td>");
+                                        sb.Append("</tr>");
                                     }
                                     if (di.GetFiles() != null && di.GetFiles().Length > 0)
                                     {
-                                        sb.Append("</ul>");
+                                        sb.Append("</tbody>");
+                                        sb.Append("</table>");
                                         sb.Append("</div>");
+                                        
                                     }
 
                                     wService.filesVersion = sb.ToString();
@@ -411,6 +476,7 @@ namespace CpuInfoClient
                         wService.filesVersion = "N/A";
                     }
 
+                    wService.connectionID = wConnectionID;
                     wServiceList.Add(wService);
                     cont++;
                 }

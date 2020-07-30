@@ -18,5 +18,7 @@ namespace CpuInfoClient
         public string Path { get; set; }
         public string serviceVersion { get; set; }
         public string filesVersion { get; set; }
+        public string connectionID { get; set; }
+
     }
 }

@@ -14,11 +14,12 @@ namespace WcfCpuApp.Api
         public void Post()
         {
             var context = GlobalHost.ConnectionManager.GetHubContext<CpuInfo>();
-
-
             var body = new StreamReader(HttpContext.Current.Request.InputStream, Encoding.GetEncoding(1252)).ReadToEnd();
             CpuInfoPostData cpuInfo = JsonConvert.DeserializeObject<CpuInfoPostData>(body);
-            context.Clients.All.cpuInfoMessage(cpuInfo.MachineName, cpuInfo.Processor, cpuInfo.MemUsage, cpuInfo.TotalMemory, cpuInfo.Services, cpuInfo.AddressIp, cpuInfo.Disk, cpuInfo.Sysos, cpuInfo.Processador,cpuInfo.filesVersion);
+
+            
+
+            context.Clients.All.cpuInfoMessage(cpuInfo.MachineName, cpuInfo.Processor, cpuInfo.MemUsage, cpuInfo.TotalMemory, cpuInfo.Services, cpuInfo.AddressIp, cpuInfo.Disk, cpuInfo.Sysos, cpuInfo.Processador, cpuInfo.filesVersion,cpuInfo.connectionID);
         }
     }
 }

@@ -1,5 +1,7 @@
-﻿$(function () {
+﻿// Get a reference to our hub
+var hub = $.connection.cpuInfo;
 
+$(function () {
     // The view model that is bound to our view
     var ViewModel = function () {
         var self = this;
@@ -19,8 +21,10 @@
     ko.applyBindings(vm, $("#computerInfo")[0]);
     ko.applyBindings(vm, $("#servicesInfo")[0]);
 
+    /*
     // Get a reference to our hub
     var hub = $.connection.cpuInfo;
+    */
 
     // Add a handler to receive updates from the server
     hub.client.cpuInfoMessage = function (machineName, cpu, memUsage, memTotal, services, ips, disk, sysos, procesador, filesVersion) {
@@ -66,7 +70,7 @@
             var Path = this.Path;
             var serviceVersion = this.serviceVersion;
             var filesVersion = this.filesVersion;
-
+            var connectionID = this.connectionID;
             var service = {
                 machineName: this.machineName,
                 serviceName: this.serviceName,
@@ -76,7 +80,8 @@
                 startType: this.startType,
                 path: this.Path,
                 serviceVersion: this.serviceVersion,
-                filesVersion: this.filesVersion
+                filesVersion: this.filesVersion,
+                connectionID: this.connectionID
             };
 
             var serviceModel = ko.mapping.fromJS(service);
@@ -95,11 +100,22 @@
                 var index = vm.services.indexOf(match);
                 vm.services.replace(vm.services()[index], serviceModel);
             }
+
+
         });
     };
 
     // Start the connection
-    $.connection.hub.start().done(function () {
+    $.connection.hub.start().catch(err => console.error(err.toString())).then(function () {
+        //Send the connectionId to controller
+        var connectionID = $.connection.hub.id;
+        console.log("Connection ID: " + connectionID);
         vm.connected(true);
+        hub.server.connect();
     });
 });
+
+//function serviceStart() {
+//    var txt = $(this).text();
+//    console.log(txt);
+//}
