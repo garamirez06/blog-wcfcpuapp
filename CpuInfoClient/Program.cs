@@ -19,6 +19,7 @@ using Microsoft.AspNet.SignalR.Client;
 using Microsoft.VisualBasic.Devices;
 using Microsoft.Win32;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace CpuInfoClient
 {
@@ -28,6 +29,7 @@ namespace CpuInfoClient
         static PerformanceCounter _cpuCounter, _memUsageCounter;
         static string wConnectionID = string.Empty;
 
+        static WebProxy _wProxy = null;
 
         private static bool startService(string wNameService)
         {
@@ -45,10 +47,26 @@ namespace CpuInfoClient
         }
         static void Main(string[] args)
         {
+            // Hello!
+            Console.WriteLine("Falcon Agent - Captura de Información en Tiempo Real");
+            Console.WriteLine("----------------------------------------------------");
             Thread pollingThread = null;
 
-            // Hello!
-            Console.WriteLine("CPU Info Client: Reporting your CPU usage today!");
+            //Buscamos si hay configuracion de Proxy
+            bool wProxyEnabled = Convert.ToBoolean(ConfigurationManager.AppSettings["UseProxy"].ToString());
+            if (wProxyEnabled)
+            {
+                Console.WriteLine(DateTime.Now.ToString() + " - Proxy activado");
+                string wDomain = ConfigurationManager.AppSettings["ProxyDomain"].ToString();
+                string wUser = ConfigurationManager.AppSettings["ProxyUser"].ToString();
+                string wPass = ConfigurationManager.AppSettings["ProxyPassword"].ToString();
+                int wPort = Convert.ToInt32(ConfigurationManager.AppSettings["ProxyPort"].ToString());
+                string wHost = ConfigurationManager.AppSettings["ProxyHost"].ToString();
+
+                _wProxy = new WebProxy(wHost, wPort);
+                _wProxy.Credentials = new System.Net.NetworkCredential(wUser, wPass, wDomain);
+            }
+
 
             try
             {
@@ -56,8 +74,11 @@ namespace CpuInfoClient
                 HubConnection hubConnection;
                 IHubProxy hubProxy;
                 var serverUrlTest = new Uri(ConfigurationManager.AppSettings["ServerUrlBase"] + "signalr/hubs");
-
                 hubConnection = new HubConnection(serverUrlTest.ToString());
+                if (_wProxy != null)
+                {
+                    hubConnection.Proxy = _wProxy;
+                }
                 hubConnection.Headers.Add("HostClient", Environment.MachineName);
                 hubProxy = hubConnection.CreateHubProxy("CpuInfo");
                 hubProxy.On<string>("Connect", (message) => Console.WriteLine(message));
@@ -66,7 +87,7 @@ namespace CpuInfoClient
                 hubProxy.On<string>("SendMessageStart", (message) => startService(message));
                 hubConnection.Start().Wait();
                 wConnectionID = hubConnection.ConnectionId;
-                Console.WriteLine("Cliente: " + wConnectionID);
+                Console.WriteLine(DateTime.Now.ToString() + " - Conectado al Hub, listo para Escuchar Eventos. Cliente: " + wConnectionID);
             }
             catch (Exception ex)
             {
@@ -76,30 +97,30 @@ namespace CpuInfoClient
 
             try
             {
-                
+                #region Creacion de Contadores de Perfomance
                 // Sets the culture to French (France)
                 //Thread.CurrentThread.CurrentCulture = new CultureInfo("fr-FR");
                 // Sets the UI culture to French (France)
                 //Thread.CurrentThread.CurrentUICulture = new CultureInfo("fr-FR");
                 //en-US
-                Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
-                Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
-                Console.WriteLine("1");
+                //Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+                //Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
+                Console.WriteLine(DateTime.Now.ToString() + " - Creamos Contadores de Perfomance para CPU");
                 _cpuCounter = new PerformanceCounter();
                 _cpuCounter.CategoryName = "Processor";
                 _cpuCounter.CounterName = "% Processor Time";
                 _cpuCounter.InstanceName = "_Total";
-                Console.WriteLine("2");
+                Console.WriteLine(DateTime.Now.ToString() + " - Creamos Contadores de Perfomance para RAM");
                 _memUsageCounter = new PerformanceCounter("Memory", "Available KBytes");
                 // Create a new thread to start polling and sending the data
-                Console.WriteLine("3");
+                #endregion
                 pollingThread = new Thread(new ParameterizedThreadStart(RunPollingThread));
                 pollingThread.Start();
 
-                Console.WriteLine("Press a key to stop and exit");
+                Console.WriteLine("Presione una tecla para detener el proceso y salir...");
                 Console.ReadKey();
 
-                Console.WriteLine("Stopping thread..");
+                Console.WriteLine("Deteniendo thread..");
 
                 _running = false;
 
@@ -116,11 +137,10 @@ namespace CpuInfoClient
 
         static void RunPollingThread(object data)
         {
-            Console.WriteLine("4");
             // Convert the object that was passed in
             DateTime lastPollTime = DateTime.MinValue;
 
-            Console.WriteLine("Started polling...");
+            Console.WriteLine(DateTime.Now.ToString() + " - Inicio de polling...");
 
             // Start the polling loop
             while (_running)
@@ -130,10 +150,11 @@ namespace CpuInfoClient
                 {
                     double cpuTime;
                     ulong memUsage, totalMemory;
-                    Console.WriteLine("5");
+                    Console.WriteLine(DateTime.Now.ToString() + " - Obtenemos los datos de la RAM utilizada");
                     // Get the stuff we need to send
                     GetMetrics(out cpuTime, out memUsage, out totalMemory);
                     #region Direcciones IP
+                    Console.WriteLine(DateTime.Now.ToString() + " - Obtenemos las Direcciones IP");
                     IPAddress[] ipv4Addresses = Array.FindAll(Dns.GetHostEntry(string.Empty).AddressList, a => a.AddressFamily == AddressFamily.InterNetwork);
                     StringBuilder wListIP = new StringBuilder();
 
@@ -148,12 +169,11 @@ namespace CpuInfoClient
                             }
                         }
                     }
-                    Console.WriteLine("6");
+
                     #endregion
                     #region Servicios
-                    Console.WriteLine("7");
                     var services = JsonConvert.SerializeObject(GetAllServices());
-                    Console.WriteLine("8");
+                    Console.WriteLine(DateTime.Now.ToString() + " - Obtenemos datos de los Discos Duros");
                     #endregion
                     #region Disco Duros
                     /*
@@ -205,6 +225,7 @@ namespace CpuInfoClient
 
                     #endregion
                     #region Sistema Operativo
+                    Console.WriteLine(DateTime.Now.ToString() + " - Obtenemos información del Sistema Operativo");
                     string wNameOS = new ComputerInfo().OSFullName;
                     string wVersionOS = new ComputerInfo().OSVersion;
                     bool wIs64Bit = Environment.Is64BitOperatingSystem;
@@ -218,14 +239,18 @@ namespace CpuInfoClient
                     #endregion
 
                     #region Procesador
+                    Console.WriteLine(DateTime.Now.ToString() + " - Obtenemos información del Procesador");
                     string wProcesador = getInfoProcesador();
                     #endregion
 
                     #region Enviar Metricas PC
+                    //Obtenemos Pais
+                    var pais = (ConfigurationManager.AppSettings["pais"]).ToString();
                     // Send the data
                     var postData = new
                     {
                         MachineName = System.Environment.MachineName,
+                        pais = pais,
                         Processor = cpuTime,
                         MemUsage = memUsage,
                         TotalMemory = totalMemory,
@@ -234,6 +259,7 @@ namespace CpuInfoClient
                         disk = wListDisk.ToString(),
                         sysos = wSO,
                         processador = wProcesador
+
                     };
                     try
                     {
@@ -245,7 +271,10 @@ namespace CpuInfoClient
                         var client = new WebClient();
                         client.Headers.Add("Content-Type", "application/json");
                         client.Headers.Add("HostClient", Environment.MachineName);
-                        //client.Headers.Add("ClientConnectionID", wConnectionID);
+
+                        if (_wProxy != null)
+                            client.Proxy = _wProxy;
+
                         var response = client.UploadString(serverUrl, json);
                         Console.WriteLine(DateTime.Now.ToString() + " - URL: " + serverUrl + " - Resultado: OK");
                     }
@@ -290,17 +319,16 @@ namespace CpuInfoClient
             ManagementObjectSearcher MOS = new ManagementObjectSearcher("SELECT * FROM Win32_Processor");
             foreach (ManagementObject MO in MOS.Get())
             {
-                wText.Append("<li>");
-                wText.Append(string.Format("Nombre: {0}", MO["Name"]));
-                wText.Append(string.Format("Número de Cores: {0} - ", MO["NumberOfCores"]));
-                wText.Append(string.Format("Número de Procesadores Lógicos: {0}", MO["NumberOfLogicalProcessors"]));
-                wText.Append("</li>");
+                wText.Append(string.Format("Nombre: {0}<br>", MO["Name"]));
+                wText.Append(string.Format("Número de Cores: {0}<br>", MO["NumberOfCores"]));
+                wText.Append(string.Format("Número de Procesadores Lógicos: {0}<br>", MO["NumberOfLogicalProcessors"]));
                 break;
             }
             return wText.ToString();
         }
         public static List<ServiceBE> GetAllServices()
         {
+            var pais = (ConfigurationManager.AppSettings["pais"]).ToString();
             List<ServiceBE> wServiceList = new List<ServiceBE>();
             ServiceBE wService = new ServiceBE();
             string wPath = string.Empty;
@@ -308,7 +336,7 @@ namespace CpuInfoClient
             try
             {
                 //
-                Console.WriteLine("Inicio de la busquedas de servicios");
+                Console.WriteLine(DateTime.Now.ToString() + " - Inicio de la búsqueda de servicios");
                 foreach (var itService in ServiceController.GetServices().OrderBy(p => p.DisplayName))
                 {
                     if (itService.ServiceType.ToString().Equals("Win32ShareProcess"))
@@ -326,6 +354,7 @@ namespace CpuInfoClient
                     }
 
                     wService = new ServiceBE();
+                    wService.pais = pais.ToUpper();
                     wService.machineName = System.Environment.MachineName;
                     wService.serviceName = itService.ServiceName;
                     wService.serviceDisplayName = itService.DisplayName;
@@ -355,45 +384,74 @@ namespace CpuInfoClient
                                 //Buscamos la version del ejecutable
                                 try
                                 {
-                                    var auxPath = wService.Path;
-                                    int wIndex = auxPath.IndexOf("/");
-                                    if (wIndex > 0)
+                                    //Busco si el servicio es Chat y si contiene en path la carpeta daemon
+                                    //Ejemplo:
+                                    //epiron3chattrynube3.exe
+                                    //"D:\Epiron\Epiron Try\Epiron Chat\Chat\daemon\epiron3chattrynube3.exe"
+                                    if (wService.serviceName.ToLower().Contains("chat") && wService.Path.ToLower().Contains("daemon"))
                                     {
-                                        auxPath = auxPath.Substring(0, wIndex - 1);
-                                        wService.serviceVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(auxPath).FileVersion;
-                                        wService.Path = auxPath;
+                                        string wDirectoryParent = Directory.GetParent(wService.Path).ToString();
+                                        wDirectoryParent = wDirectoryParent.Replace(@"\daemon\", "\\");
+                                        //Preguntamos si existe el archivo versioninfo.json
+                                        string wVersionChat = wDirectoryParent.Replace("\\daemon","") + "\\versioninfo.json";
+                                        if (File.Exists(wVersionChat))
+                                        {
+                                        
+                                            // read JSON directly from a file
+                                            using (StreamReader file = File.OpenText(wVersionChat))
+                                            using (JsonTextReader reader = new JsonTextReader(file))
+                                            {
+                                                JObject o2 = (JObject)JToken.ReadFrom(reader);
+                                                VersionChatBE wChat = JsonConvert.DeserializeObject<VersionChatBE>(o2.ToString());
+                                                wService.Path = wDirectoryParent;
+                                                wService.serviceVersion = wChat.version;
+                                            }
+                                        }
                                     }
                                     else
                                     {
-                                        wIndex = auxPath.IndexOf(" -");
+                                        var auxPath = wService.Path;
+                                        int wIndex = auxPath.IndexOf("/");
                                         if (wIndex > 0)
                                         {
-                                            auxPath = auxPath.Substring(0, wIndex);
+                                            auxPath = auxPath.Substring(0, wIndex - 1);
                                             wService.serviceVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(auxPath).FileVersion;
                                             wService.Path = auxPath;
                                         }
                                         else
                                         {
-                                            wIndex = auxPath.IndexOf(".exe ");
+                                            wIndex = auxPath.IndexOf(" -");
                                             if (wIndex > 0)
                                             {
-                                                auxPath = auxPath.Substring(0, wIndex + 4);
+                                                auxPath = auxPath.Substring(0, wIndex);
                                                 wService.serviceVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(auxPath).FileVersion;
                                                 wService.Path = auxPath;
                                             }
                                             else
                                             {
-                                                if (File.Exists(wService.Path))
+                                                wIndex = auxPath.IndexOf(".exe ");
+                                                if (wIndex > 0)
                                                 {
-                                                    wService.serviceVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(wService.Path).FileVersion;
+                                                    auxPath = auxPath.Substring(0, wIndex + 4);
+                                                    wService.serviceVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(auxPath).FileVersion;
+                                                    wService.Path = auxPath;
                                                 }
                                                 else
                                                 {
-                                                    wService.serviceVersion = "No existe la ruta " + wService.Path;
+                                                    if (File.Exists(wService.Path))
+                                                    {
+                                                        wService.serviceVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(wService.Path).FileVersion;
+                                                    }
+                                                    else
+                                                    {
+                                                        wService.serviceVersion = "No existe la ruta " + wService.Path;
+                                                    }
                                                 }
                                             }
                                         }
                                     }
+
+
                                 }
                                 catch (Exception ex)
                                 {
@@ -408,68 +466,72 @@ namespace CpuInfoClient
                     //Buscamos todos los archivos dlls y exe en el folder path
                     if (wService.serviceVersion != "N/A")
                     {
-
-                        string wDirectory = Path.GetDirectoryName(wService.Path);
-                        if (!Directory.Exists(wDirectory))
+                        if(wService.serviceName.ToLower().Contains("chat"))
                         {
-                            wService.filesVersion = "N/A";
+                            wService.filesVersion = "NO Aplica para CHAT";
                         }
                         else
                         {
-                            StringBuilder sb = new StringBuilder();
-                            try
+                            string wDirectory = Path.GetDirectoryName(wService.Path);
+                            if (!Directory.Exists(wDirectory))
                             {
-                                if (!string.IsNullOrEmpty(wDirectory))
+                                wService.filesVersion = "N/A";
+                            }
+                            else
+                            {
+                                StringBuilder sb = new StringBuilder();
+                                try
                                 {
-                                    //Buscamos todos los archivos del directorio
-                                    DirectoryInfo di = new DirectoryInfo(wDirectory);
-                                    if (di.GetFiles() != null && di.GetFiles().Length > 0)
+                                    if (!string.IsNullOrEmpty(wDirectory))
                                     {
-                                        sb.Append("<button type=\"button\" class=\"btn btn-info collapsible\"  onclick=\"collapse()\">+</button>");
-                                        sb.Append("<div id=\"collapseServices\" class=\"content\">");
-                                        sb.Append("<table class=\"table table-striped table-hover\">");
-                                        sb.Append("<thead><tr><th scope=\"col\"> Archivo </th><th scope=\"col\"> Versión</th></tr></thead>");
-                                        sb.Append("<tbody>");
-                                    }
-                                    foreach (var file in di.GetFiles())
-                                    {
-                                        if (!((file.Extension == ".dll") || (file.Extension == ".exe")))
-                                            continue;
-                                        if (file.Name.ToLower() == (ConfigurationManager.AppSettings["DllDefault"].ToString().ToLower()) || file.Name.ToLower() == (ConfigurationManager.AppSettings["DllAQDefault"].ToString().ToLower()))
+                                        //Buscamos todos los archivos del directorio
+                                        DirectoryInfo di = new DirectoryInfo(wDirectory);
+                                        if (di.GetFiles() != null && di.GetFiles().Length > 0)
                                         {
-                                            wService.serviceVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(file.FullName).FileVersion;
-                                            wService.Path = file.FullName;
+                                            sb.Append("<button type=\"button\" class=\"btn btn-info collapsible\"  onclick=\"collapse()\">+</button>");
+                                            sb.Append("<div id=\"collapseServices\" class=\"content\">");
+                                            sb.Append("<table class=\"table table-striped table-hover\">");
+                                            sb.Append("<thead><tr><th scope=\"col\"> Archivo </th><th scope=\"col\"> Versión</th></tr></thead>");
+                                            sb.Append("<tbody>");
+                                        }
+                                        foreach (var file in di.GetFiles())
+                                        {
+                                            if (!((file.Extension == ".dll") || (file.Extension == ".exe")))
+                                                continue;
+                                            if (file.Name.ToLower() == (ConfigurationManager.AppSettings["DllDefault"].ToString().ToLower()) || file.Name.ToLower() == (ConfigurationManager.AppSettings["DllAQDefault"].ToString().ToLower()))
+                                            {
+                                                wService.serviceVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(file.FullName).FileVersion;
+                                                wService.Path = file.FullName;
+                                            }
+
+                                            sb.Append("<tr>");
+                                            sb.AppendLine("<td>" + file.FullName + "</td><td>" + System.Diagnostics.FileVersionInfo.GetVersionInfo(file.FullName).FileVersion + "</td>");
+                                            sb.Append("</tr>");
+                                        }
+                                        if (di.GetFiles() != null && di.GetFiles().Length > 0)
+                                        {
+                                            sb.Append("</tbody>");
+                                            sb.Append("</table>");
+                                            sb.Append("</div>");
+
                                         }
 
-                                        sb.Append("<tr>");
-                                        sb.AppendLine("<td>" + file.FullName + "</td><td>" + System.Diagnostics.FileVersionInfo.GetVersionInfo(file.FullName).FileVersion + "</td>");
-                                        sb.Append("</tr>");
+                                        wService.filesVersion = sb.ToString();
+                                        if (string.IsNullOrEmpty(wService.filesVersion))
+                                            wService.filesVersion = "N/A";
                                     }
-                                    if (di.GetFiles() != null && di.GetFiles().Length > 0)
+                                    else
                                     {
-                                        sb.Append("</tbody>");
-                                        sb.Append("</table>");
-                                        sb.Append("</div>");
-                                        
+                                        wService.filesVersion = "N/A";
                                     }
 
-                                    wService.filesVersion = sb.ToString();
-                                    if (string.IsNullOrEmpty(wService.filesVersion))
-                                        wService.filesVersion = "N/A";
                                 }
-                                else
+                                catch (Exception ex)
                                 {
-                                    wService.filesVersion = "N/A";
+                                    Console.WriteLine(wDirectory + " - " + ex.Message);
                                 }
-
-                            }
-                            catch (Exception ex)
-                            {
-                                Console.WriteLine(wDirectory + " - " + ex.Message);
                             }
                         }
-
-
                     }
                     else
                     {

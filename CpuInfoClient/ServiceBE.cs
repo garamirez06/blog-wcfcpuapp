@@ -18,7 +18,15 @@ namespace CpuInfoClient
         public string Path { get; set; }
         public string serviceVersion { get; set; }
         public string filesVersion { get; set; }
+        //Campos a Revisar
         public string connectionID { get; set; }
-
+        public string pais { get; set; }
     }
+
+
+    public class VersionChatBE
+    {
+        public string version { get; set; }
+    }
+
 }

@@ -27,7 +27,8 @@ $(function () {
     */
 
     // Add a handler to receive updates from the server
-    hub.client.cpuInfoMessage = function (machineName, cpu, memUsage, memTotal, services, ips, disk, sysos, procesador, filesVersion) {
+    hub.client.cpuInfoMessage = function (machineName, cpu, memUsage, memTotal, services, ips, disk, sysos, procesador, filesVersion, pais) {
+        var country = pais;
         disk = disk.replace("\r\n", "<br>", "g");
         var machine = {
             machineName: machineName,
@@ -40,7 +41,8 @@ $(function () {
             disk: disk,
             sysos: sysos,
             processador: procesador,
-            filesVersion: filesVersion
+            filesVersion: filesVersion,
+            pais: pais
         };
 
 
@@ -61,6 +63,7 @@ $(function () {
         var json = JSON.parse(services);
 
         jQuery.each(json, function () {
+            var pais = this.pais;
             var machineName = this.machineName;
             var serviceName = this.serviceName;
             var serviceDisplayName = this.serviceDisplayName;
@@ -70,8 +73,9 @@ $(function () {
             var Path = this.Path;
             var serviceVersion = this.serviceVersion;
             var filesVersion = this.filesVersion;
-            var connectionID = this.connectionID;
+            //var connectionID = this.connectionID;
             var service = {
+                pais: this.pais,
                 machineName: this.machineName,
                 serviceName: this.serviceName,
                 serviceDisplayName: this.serviceDisplayName,
@@ -80,8 +84,8 @@ $(function () {
                 startType: this.startType,
                 path: this.Path,
                 serviceVersion: this.serviceVersion,
-                filesVersion: this.filesVersion,
-                connectionID: this.connectionID
+                filesVersion: this.filesVersion
+                //connectionID: this.connectionID
             };
 
             var serviceModel = ko.mapping.fromJS(service);
