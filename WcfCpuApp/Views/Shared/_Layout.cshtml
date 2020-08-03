@@ -4,10 +4,9 @@
 }
 
 <!DOCTYPE html>
-
-<html>
+<html lang="en">
 <head>
-    <meta name="viewport" content="width=device-width" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Falcon - Monitor</title>
 
     <link href="~/Content/bootstrap.min.css" type="text/css" rel="stylesheet" />
@@ -18,12 +17,20 @@
     <script src="~/Scripts/knockout-3.5.1.js"></script>
     <script src="/Scripts/knockout.mapping-latest.js"></script>
 
-
     @RenderSection("Scripts", false)
 
 </head>
-<body style="background-color: black; font-size:12px;">
-    <div class="container">
+<body>
+    <style>
+        body {
+            background-color: black;
+            font-size: 12px;
+            height: 100%;
+            margin: 0px;
+            padding: 0px;
+        }
+    </style>
+    <div class="container-fluid">
         @RenderBody()
     </div>
     <script type="text/javascript" src="~/Scripts/ScriptCollapsing.js"></script>
