@@ -89,23 +89,43 @@ $(function () {
             };
 
             var serviceModel = ko.mapping.fromJS(service);
+
             // Check if we already have it:
             var flag;
+
+            /*
             var match = vm.services().forEach(function (item) {
-                if (item.machineName() == machineName && item.serviceName() == serviceName) {
+                const datos = vm.services();
+                const search = datos.find(serv => serv.machineName = machineName && serv.serviceName == serviceName && serv.status === status);
+                if (item.machineName() === machineName && item.serviceName() === serviceName) {
                     flag = true;
                 }
             });
+            */
 
-            match = flag;
-            if (!match)
-                vm.services.push(serviceModel);
-            else {
-                var index = vm.services.indexOf(match);
+
+            const datos = vm.services();
+            const search = datos.find(serv => serv.machineName() === machineName && serv.serviceName() === serviceName && serv.status() !== status);
+            const search2 = datos.find(serv => serv.machineName() === machineName && serv.serviceName() === serviceName && serv.status() === status);
+            
+            if (typeof search !== 'undefined') {
+                var index = vm.services.indexOf(search);
                 vm.services.replace(vm.services()[index], serviceModel);
             }
+            else {
+                if (typeof search2 === 'undefined')
+                    vm.services.push(serviceModel);
+            }
 
+            
 
+            //match = flag;
+            //if (!match)
+            //    vm.services.push(serviceModel);
+            //else {
+            //    var index = vm.services.indexOf(match);
+            //    vm.services.replace(vm.services()[index], serviceModel);
+            //}
         });
     };
 

@@ -250,7 +250,7 @@ namespace CpuInfoClient
                     var postData = new
                     {
                         MachineName = System.Environment.MachineName,
-                        pais = pais,
+                        pais = pais.ToUpper(),
                         Processor = cpuTime,
                         MemUsage = memUsage,
                         TotalMemory = totalMemory,
@@ -328,7 +328,7 @@ namespace CpuInfoClient
         }
         public static List<ServiceBE> GetAllServices()
         {
-            var pais = (ConfigurationManager.AppSettings["pais"]).ToString();
+            var pais = (ConfigurationManager.AppSettings["pais"]).ToUpper().ToString();
             List<ServiceBE> wServiceList = new List<ServiceBE>();
             ServiceBE wService = new ServiceBE();
             string wPath = string.Empty;
@@ -339,6 +339,7 @@ namespace CpuInfoClient
                 Console.WriteLine(DateTime.Now.ToString() + " - Inicio de la búsqueda de servicios");
                 foreach (var itService in ServiceController.GetServices().OrderBy(p => p.DisplayName))
                 {
+
                     if (itService.ServiceType.ToString().Equals("Win32ShareProcess"))
                         continue;
 
@@ -393,10 +394,10 @@ namespace CpuInfoClient
                                         string wDirectoryParent = Directory.GetParent(wService.Path).ToString();
                                         wDirectoryParent = wDirectoryParent.Replace(@"\daemon\", "\\");
                                         //Preguntamos si existe el archivo versioninfo.json
-                                        string wVersionChat = wDirectoryParent.Replace("\\daemon","") + "\\versioninfo.json";
+                                        string wVersionChat = wDirectoryParent.Replace("\\daemon", "") + "\\versioninfo.json";
                                         if (File.Exists(wVersionChat))
                                         {
-                                        
+
                                             // read JSON directly from a file
                                             using (StreamReader file = File.OpenText(wVersionChat))
                                             using (JsonTextReader reader = new JsonTextReader(file))
@@ -410,52 +411,68 @@ namespace CpuInfoClient
                                     }
                                     else
                                     {
-                                        var auxPath = wService.Path;
-                                        int wIndex = auxPath.IndexOf("/");
-                                        if (wIndex > 0)
+                                        if (wService.serviceName.ToLower().Contains("epiron"))
                                         {
-                                            auxPath = auxPath.Substring(0, wIndex - 1);
-                                            wService.serviceVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(auxPath).FileVersion;
-                                            wService.Path = auxPath;
+                                            if (File.Exists(wService.Path))
+                                            {
+                                                wService.serviceVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(wService.Path).FileVersion;
+                                            }
+                                            else
+                                            {
+                                                wService.serviceVersion = "No existe la ruta " + wService.Path;
+                                            }
                                         }
                                         else
                                         {
-                                            wIndex = auxPath.IndexOf(" -");
+                                            var auxPath = wService.Path;
+                                            int wIndex = auxPath.IndexOf("/");
                                             if (wIndex > 0)
                                             {
-                                                auxPath = auxPath.Substring(0, wIndex);
+                                                auxPath = auxPath.Substring(0, wIndex - 1);
                                                 wService.serviceVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(auxPath).FileVersion;
                                                 wService.Path = auxPath;
                                             }
                                             else
                                             {
-                                                wIndex = auxPath.IndexOf(".exe ");
+                                                wIndex = auxPath.IndexOf(" -");
                                                 if (wIndex > 0)
                                                 {
-                                                    auxPath = auxPath.Substring(0, wIndex + 4);
+                                                    auxPath = auxPath.Substring(0, wIndex);
                                                     wService.serviceVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(auxPath).FileVersion;
                                                     wService.Path = auxPath;
                                                 }
                                                 else
                                                 {
-                                                    if (File.Exists(wService.Path))
+                                                    wIndex = auxPath.IndexOf(".exe ");
+                                                    if (wIndex > 0)
                                                     {
-                                                        wService.serviceVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(wService.Path).FileVersion;
+                                                        auxPath = auxPath.Substring(0, wIndex + 4);
+                                                        wService.serviceVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(auxPath).FileVersion;
+                                                        wService.Path = auxPath;
                                                     }
                                                     else
                                                     {
-                                                        wService.serviceVersion = "No existe la ruta " + wService.Path;
+                                                        if (File.Exists(wService.Path))
+                                                        {
+                                                            wService.serviceVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(wService.Path).FileVersion;
+                                                        }
+                                                        else
+                                                        {
+                                                            wService.serviceVersion = "No existe la ruta " + wService.Path;
+                                                        }
                                                     }
                                                 }
                                             }
                                         }
+
+
                                     }
 
 
                                 }
                                 catch (Exception ex)
                                 {
-                                    Console.WriteLine("ERROR: " + ex.Message);
+                                    Console.WriteLine(wService.serviceDisplayName + " -  ERROR: " + ex.Message);
                                     wService.serviceVersion = "N/A";
                                 }
 
@@ -466,7 +483,7 @@ namespace CpuInfoClient
                     //Buscamos todos los archivos dlls y exe en el folder path
                     if (wService.serviceVersion != "N/A")
                     {
-                        if(wService.serviceName.ToLower().Contains("chat"))
+                        if (wService.serviceName.ToLower().Contains("chat"))
                         {
                             wService.filesVersion = "NO Aplica para CHAT";
                         }
