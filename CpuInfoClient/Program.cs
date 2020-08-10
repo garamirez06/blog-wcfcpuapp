@@ -419,7 +419,7 @@ namespace CpuInfoClient
                                             }
                                             else
                                             {
-                                                wService.serviceVersion = "No existe la ruta " + wService.Path;
+                                                wService.serviceVersion = "NO EXISTE LA RUTA";
                                             }
                                         }
                                         else
@@ -458,7 +458,7 @@ namespace CpuInfoClient
                                                         }
                                                         else
                                                         {
-                                                            wService.serviceVersion = "No existe la ruta " + wService.Path;
+                                                            wService.serviceVersion = "NO EXISTE LA RUTA";
                                                         }
                                                     }
                                                 }
@@ -507,7 +507,7 @@ namespace CpuInfoClient
                                         {
                                             sb.Append("<button type=\"button\" class=\"btn btn-info collapsible\"  onclick=\"collapse()\">+</button>");
                                             sb.Append("<div id=\"collapseServices\" class=\"content\">");
-                                            sb.Append("<table class=\"table table-striped table-hover\">");
+                                            sb.Append("<table class=\"table table-striped table-hover\" style='font-size: 11px;'>");
                                             sb.Append("<thead><tr><th scope=\"col\"> Archivo </th><th scope=\"col\"> Versión</th></tr></thead>");
                                             sb.Append("<tbody>");
                                         }
