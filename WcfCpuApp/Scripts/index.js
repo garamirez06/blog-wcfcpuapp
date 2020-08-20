@@ -105,18 +105,26 @@ $(function () {
 
 
             const datos = vm.services();
-            const search = datos.find(serv => serv.machineName() === machineName && serv.serviceName() === serviceName && serv.status() !== status);
-            const search2 = datos.find(serv => serv.machineName() === machineName && serv.serviceName() === serviceName && serv.status() === status);
+            //Filtro para ver si existe el servicio
+            const searchService = datos.find(serv => serv.machineName() === machineName && serv.serviceName() === serviceName && serv.status() === status);
+            //Filtro por Estado
+            const searchStatus = datos.find(serv => serv.machineName() === machineName && serv.serviceName() === serviceName && serv.status() !== status);
+            //Filtro por Version
+            const searchVersion = datos.find(serv => serv.machineName() === machineName && serv.serviceName() === serviceName && serv.serviceVersion() !== serviceVersion);
             
-            if (typeof search !== 'undefined') {
-                var index = vm.services.indexOf(search);
+            if (typeof searchStatus !== 'undefined') {
+                var index = vm.services.indexOf(searchStatus);
                 vm.services.replace(vm.services()[index], serviceModel);
             }
             else {
-                if (typeof search2 === 'undefined')
+                if (typeof searchService === 'undefined')
                     vm.services.push(serviceModel);
             }
 
+            if (typeof searchVersion !== 'undefined') {
+                var index2 = vm.services.indexOf(searchVersion);
+                vm.services.replace(vm.services()[index2], serviceModel);
+            }
             
 
             //match = flag;

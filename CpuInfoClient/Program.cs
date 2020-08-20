@@ -17,6 +17,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNet.SignalR.Client;
 using Microsoft.VisualBasic.Devices;
+using Microsoft.Web.Administration;
 using Microsoft.Win32;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -237,11 +238,15 @@ namespace CpuInfoClient
 
                     string wSO = wNameOS + " - Version: " + wVersionOS + " - Arquitectura: " + wArqOS;
                     #endregion
-
                     #region Procesador
                     Console.WriteLine(DateTime.Now.ToString() + " - Obtenemos información del Procesador");
                     string wProcesador = getInfoProcesador();
                     #endregion
+                    //llamamos a los iis
+                    GetAllSitesIIS();
+                    //llamamos a los netframework
+                    Get1To45VersionFromRegistry();
+                    Get45PlusFromRegistry();
 
                     #region Enviar Metricas PC
                     //Obtenemos Pais
@@ -346,13 +351,15 @@ namespace CpuInfoClient
                     //if (!itService.Status.Equals(ServiceControllerStatus.Running))
                     //    continue;
 
-                    if (!Environment.MachineName.Equals("GUSTAVO-ASUS-UX"))
+                    if (!itService.ServiceName.ToString().Equals("AdobeUpdateService"))
                     {
                         if (!itService.ServiceName.ToLower().Contains("epiron"))
                             continue;
                         if (itService.ServiceName.ToLower().Contains("sql"))
                             continue;
                     }
+
+
 
                     wService = new ServiceBE();
                     wService.pais = pais.ToUpper();
@@ -362,6 +369,7 @@ namespace CpuInfoClient
                     wService.serviceType = itService.ServiceType.ToString();
                     wService.status = itService.Status.ToString();
 
+                    /*
                     var obj = Environment.Version;
                     //Detectamos si el framework es 4.6 o Superior
                     if (obj.Major == 4 && obj.MajorRevision == 0 && obj.Build == 30319 && obj.Revision >= 42000)
@@ -369,6 +377,8 @@ namespace CpuInfoClient
                         wService.startType = "N/A";
                     else
                         wService.startType = "N/A";
+                    */
+
 
                     using (RegistryKey wKey = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Services\" + wService.serviceName))
                     {
@@ -424,48 +434,8 @@ namespace CpuInfoClient
                                         }
                                         else
                                         {
-                                            var auxPath = wService.Path;
-                                            int wIndex = auxPath.IndexOf("/");
-                                            if (wIndex > 0)
-                                            {
-                                                auxPath = auxPath.Substring(0, wIndex - 1);
-                                                wService.serviceVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(auxPath).FileVersion;
-                                                wService.Path = auxPath;
-                                            }
-                                            else
-                                            {
-                                                wIndex = auxPath.IndexOf(" -");
-                                                if (wIndex > 0)
-                                                {
-                                                    auxPath = auxPath.Substring(0, wIndex);
-                                                    wService.serviceVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(auxPath).FileVersion;
-                                                    wService.Path = auxPath;
-                                                }
-                                                else
-                                                {
-                                                    wIndex = auxPath.IndexOf(".exe ");
-                                                    if (wIndex > 0)
-                                                    {
-                                                        auxPath = auxPath.Substring(0, wIndex + 4);
-                                                        wService.serviceVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(auxPath).FileVersion;
-                                                        wService.Path = auxPath;
-                                                    }
-                                                    else
-                                                    {
-                                                        if (File.Exists(wService.Path))
-                                                        {
-                                                            wService.serviceVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(wService.Path).FileVersion;
-                                                        }
-                                                        else
-                                                        {
-                                                            wService.serviceVersion = "NO EXISTE LA RUTA";
-                                                        }
-                                                    }
-                                                }
-                                            }
+                                            wService.serviceVersion = "VERIFICAR SERVICIO: " + wService.serviceName;
                                         }
-
-
                                     }
 
 
@@ -556,6 +526,7 @@ namespace CpuInfoClient
                     }
 
                     wService.connectionID = wConnectionID;
+                    Console.WriteLine(wService.serviceName + " - " + wService.serviceVersion);
                     wServiceList.Add(wService);
                     cont++;
                 }
@@ -569,5 +540,186 @@ namespace CpuInfoClient
 
             return wServiceList;
         }
+
+        public static List<SitesIISBE> GetAllSitesIIS()
+        {
+            List<SitesIISBE> wList = null;
+            SitesIISBE wSite = null;
+
+            var iisManager = new ServerManager();
+            SiteCollection sites = iisManager.Sites;
+            Console.WriteLine("Listado de Sitios IIS");
+            Console.WriteLine("======= == ======");
+            Console.WriteLine("Se detectaron: {0} sitios", sites.Count);
+            Console.WriteLine("==========================");
+            if (sites.Count > 0)
+            {
+                wList = new List<SitesIISBE>();
+                foreach (var site in sites)
+                {
+                    var applicationRoot = site.Applications.Where(a => a.Path == "/").Single();
+                    var virtualRoot = applicationRoot.VirtualDirectories.Where(v => v.Path == "/").Single();
+
+                    var binding = string.Empty;
+                    //item.Applications[1].VirtualDirectories[0].PhysicalPath
+                    if (site.Bindings.Count > 0)
+                    {
+                        foreach (var enl in site.Bindings)
+                        {
+                            binding += enl.BindingInformation;
+                            if (site.Bindings.Count > 1)
+                                binding += " | ";
+                        }
+                    }
+                    wSite = new SitesIISBE();
+                    wSite.siteID = site.Id;
+                    wSite.siteName = site.Name;
+                    wSite.siteBinding = binding;
+                    wSite.siteState = site.State.ToString();
+                    wSite.sitePath = virtualRoot.PhysicalPath;
+                    Console.WriteLine(string.Format("Id Sitio: {0} - Nombre del Sitio: {1} \n Enlaces:  {2} - Estado: {3} - Ruta: {4}", site.Id, site.Name, binding, site.State, virtualRoot.PhysicalPath));
+                }
+            }
+
+            return wList;
+        }
+
+
+
+        #region NetFramework
+        //Writes the version
+        private static void WriteVersion(string version, string spLevel = "")
+        {
+            version = version.Trim();
+            if (string.IsNullOrEmpty(version))
+                return;
+
+            string spLevelString = "";
+            if (!string.IsNullOrEmpty(spLevel))
+                spLevelString = " Service Pack " + spLevel;
+
+            Console.WriteLine($"{version}{spLevelString}");
+        }
+        private static void Get1To45VersionFromRegistry()
+        {
+            Console.WriteLine("Buscamos los .NET Framework < 4.5");
+            // Opens the registry key for the .NET Framework entry.
+            using (RegistryKey ndpKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\NET Framework Setup\NDP\"))
+            {
+                foreach (string versionKeyName in ndpKey.GetSubKeyNames())
+                {
+                    // Skip .NET Framework 4.5 version information.
+                    if (versionKeyName == "v4")
+                    {
+                        continue;
+                    }
+
+                    if (versionKeyName.StartsWith("v"))
+                    {
+
+                        RegistryKey versionKey = ndpKey.OpenSubKey(versionKeyName);
+                        // Get the .NET Framework version value.
+                        string name = (string)versionKey.GetValue("Version", "");
+                        // Get the service pack (SP) number.
+                        string sp = versionKey.GetValue("SP", "").ToString();
+
+                        // Get the installation flag, or an empty string if there is none.
+                        string install = versionKey.GetValue("Install", "").ToString();
+                        if (string.IsNullOrEmpty(install)) // No install info; it must be in a child subkey.
+                            WriteVersion(name);
+                        else
+                        {
+                            if (!(string.IsNullOrEmpty(sp)) && install == "1")
+                            {
+                                WriteVersion(name, sp);
+                            }
+                        }
+                        if (!string.IsNullOrEmpty(name))
+                        {
+                            continue;
+                        }
+                        foreach (string subKeyName in versionKey.GetSubKeyNames())
+                        {
+                            RegistryKey subKey = versionKey.OpenSubKey(subKeyName);
+                            name = (string)subKey.GetValue("Version", "");
+                            if (!string.IsNullOrEmpty(name))
+                                sp = subKey.GetValue("SP", "").ToString();
+
+                            install = subKey.GetValue("Install", "").ToString();
+                            if (string.IsNullOrEmpty(install)) //No install info; it must be later.
+                                WriteVersion(name);
+                            else
+                            {
+                                if (!(string.IsNullOrEmpty(sp)) && install == "1")
+                                {
+                                    WriteVersion(name, sp);
+                                }
+                                else if (install == "1")
+                                {
+                                    WriteVersion(name);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        private static void Get45PlusFromRegistry()
+        {
+            Console.WriteLine("Buscamos los .NET Framework > 4.5");
+            const string subkey = @"SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full\";
+
+            using (RegistryKey ndpKey = Registry.LocalMachine.OpenSubKey(subkey))
+            {
+                if (ndpKey == null)
+                    return;
+                //First check if there's an specific version indicated
+                if (ndpKey.GetValue("Version") != null)
+                {
+                    WriteVersion(ndpKey.GetValue("Version").ToString());
+                }
+                else
+                {
+                    if (ndpKey != null && ndpKey.GetValue("Release") != null)
+                    {
+                        WriteVersion(
+                            CheckFor45PlusVersion(
+                                    (int)ndpKey.GetValue("Release")
+                                )
+                        );
+                    }
+                }
+            }
+
+            // Checking the version using >= enables forward compatibility.
+            string CheckFor45PlusVersion(int releaseKey)
+            {
+                if (releaseKey >= 528040)
+                    return "4.8";
+                if (releaseKey >= 461808)
+                    return "4.7.2";
+                if (releaseKey >= 461308)
+                    return "4.7.1";
+                if (releaseKey >= 460798)
+                    return "4.7";
+                if (releaseKey >= 394802)
+                    return "4.6.2";
+                if (releaseKey >= 394254)
+                    return "4.6.1";
+                if (releaseKey >= 393295)
+                    return "4.6";
+                if (releaseKey >= 379893)
+                    return "4.5.2";
+                if (releaseKey >= 378675)
+                    return "4.5.1";
+                if (releaseKey >= 378389)
+                    return "4.5";
+                // This code should never execute. A non-null release key should mean
+                // that 4.5 or later is installed.
+                return "";
+            }
+        }
+
+        #endregion
     }
 }

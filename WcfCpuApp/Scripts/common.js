@@ -18,3 +18,30 @@ function exportToExcel(table,name) {
         window.location.href = uri + base64(format(template, ctx))
     }
 }
+
+function GetCountries() {
+
+
+    $.ajax({
+        url: "Api/cpuInfo/getData",
+        timeout: 50000,
+        type: "GET",
+        dataType: 'json',
+        contentType: "application/json;charset=utf-8",
+        success: function (result) {
+            console.log("volvi bebecito " + result);
+            //fillCountryOptions(JSON.parse(result));
+            /* console.log(JSON.stringify(obj));
+ 
+             if (result.Result == 'OK')
+                 console.log(JSON.stringify(obj));
+ 
+             if (result.Result == 'ERROR') {
+                 console.log(JSON.stringify(obj));
+             }*/
+        },
+        error: function (jqXHR, textStatus) {
+            console.log(textStatus);
+        }
+    });
+}

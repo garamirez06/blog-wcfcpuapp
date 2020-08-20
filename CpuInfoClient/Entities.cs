@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace CpuInfoClient
 {
+    public class Entities { }
     public class ServiceBE
     {
         public string machineName { get; set; }
@@ -29,4 +30,12 @@ namespace CpuInfoClient
         public string version { get; set; }
     }
 
+    public class SitesIISBE
+    {
+        public long siteID { get; set; }
+        public string siteName { get; set; }
+        public string siteBinding { get; set; }
+        public string siteState { get; set; }
+        public string sitePath { get; set; }
+    }
 }

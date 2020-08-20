@@ -28,5 +28,12 @@ namespace WcfCpuApp.Api
             var a = 1;
             return "data";
         }
+
+        [HttpGet]
+        public string getData2()
+        {
+            var a = 1;
+            return "data";
+        }
     }
 }
