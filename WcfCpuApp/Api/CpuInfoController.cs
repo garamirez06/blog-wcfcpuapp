@@ -19,7 +19,7 @@ namespace WcfCpuApp.Api
 
 
 
-            context.Clients.All.cpuInfoMessage(cpuInfo.MachineName, cpuInfo.Processor, cpuInfo.MemUsage, cpuInfo.TotalMemory, cpuInfo.Services, cpuInfo.AddressIp, cpuInfo.Disk, cpuInfo.Sysos, cpuInfo.Processador, cpuInfo.filesVersion, cpuInfo.pais, cpuInfo.iisSites);
+            context.Clients.All.cpuInfoMessage(cpuInfo.MachineName, cpuInfo.Processor, cpuInfo.MemUsage, cpuInfo.TotalMemory, cpuInfo.Services, cpuInfo.AddressIp, cpuInfo.Disk, cpuInfo.Sysos, cpuInfo.Processador, cpuInfo.filesVersion, cpuInfo.pais, cpuInfo.iisSites, cpuInfo.processNode);
         }
 
         [HttpGet]

@@ -72,6 +72,7 @@ namespace CpuInfoClient
 
             try
             {
+                Console.WriteLine(DateTime.Now.ToString() + " - Iniciamos el Modo Escucha");
                 //Creamos hilo de Escucha
                 HubConnection hubConnection;
                 IHubProxy hubProxy;
@@ -93,7 +94,7 @@ namespace CpuInfoClient
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Console.WriteLine(DateTime.Now.ToString() + " No se pudo conectar al Hub. Mas Info: " + ex.Message);
             }
 
 
@@ -143,12 +144,24 @@ namespace CpuInfoClient
             DateTime lastPollTime = DateTime.MinValue;
 
             Console.WriteLine(DateTime.Now.ToString() + " - Inicio de polling...");
+            int frecuencia = 0;
+            try
+            {
+                frecuencia = Convert.ToInt32((ConfigurationManager.AppSettings["frecuencia"]).ToString());
+                Console.WriteLine(DateTime.Now.ToString() + " - Polling cada " + frecuencia + " segundos");
+                frecuencia = frecuencia * 1000;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(DateTime.Now.ToString() + " - Error con la Configuracion de Frecuencia, se utiliza valor por defecto de 10 segundos. Mas Info: " + ex.Message);
+                frecuencia = 10000;
+            }
 
             // Start the polling loop
             while (_running)
             {
-                // Poll every second
-                if ((DateTime.Now - lastPollTime).TotalMilliseconds >= 1000)
+                // Poll segun frecuencia
+                if ((DateTime.Now - lastPollTime).TotalMilliseconds >= frecuencia)
                 {
                     double cpuTime;
                     ulong memUsage, totalMemory;
@@ -173,11 +186,13 @@ namespace CpuInfoClient
                     }
 
                     #endregion
+                    /*
                     #region Framework
                     //llamamos a los netframework
-                    Get1To45VersionFromRegistry();
-                    Get45PlusFromRegistry();
+                    var net4 = Get1To45VersionFromRegistry();
+                    var net45=Get45PlusFromRegistry();
                     #endregion
+                    */
                     #region Servicios
                     var services = JsonConvert.SerializeObject(GetAllServices());
                     Console.WriteLine(DateTime.Now.ToString() + " - Obtenemos datos de los Discos Duros");
@@ -251,7 +266,9 @@ namespace CpuInfoClient
                     #region IIS
                     var iisSites = JsonConvert.SerializeObject(GetAllSitesIIS());
                     #endregion
-
+                    #region Node
+                    var node = JsonConvert.SerializeObject(getInfoNode());
+                    #endregion
                     #region Enviar Metricas PC
                     //Obtenemos Pais
                     var pais = (ConfigurationManager.AppSettings["pais"]).ToString();
@@ -268,8 +285,8 @@ namespace CpuInfoClient
                         disk = wListDisk.ToString(),
                         sysos = wSO,
                         processador = wProcesador,
-                        iisSites = iisSites
-
+                        iisSites = iisSites,
+                        processNode = node
                     };
                     try
                     {
@@ -293,7 +310,6 @@ namespace CpuInfoClient
                         Console.WriteLine(DateTime.Now.ToString() + " - URL: " + new Uri(ConfigurationManager.AppSettings["ServerUrl"]).ToString() + " - Error: " + ex.Message);
                     }
                     #endregion
-
 
                     // Reset the poll time
                     lastPollTime = DateTime.Now;
@@ -352,8 +368,10 @@ namespace CpuInfoClient
                     if (itService.ServiceType.ToString().Equals("Win32ShareProcess"))
                         continue;
 
+
                     if (!itService.ServiceName.ToLower().Contains("epiron"))
-                        continue;
+                        if (!itService.ServiceName.ToLower().Contains("nginx"))
+                            continue;
                     if (itService.ServiceName.ToLower().Contains("sql"))
                         continue;
 
@@ -414,7 +432,7 @@ namespace CpuInfoClient
                                             }
                                             else
                                             {
-                                                wService.serviceVersion = "NO EXISTE LA RUTA - "+ wService.Path;
+                                                wService.serviceVersion = "NO EXISTE LA RUTA - " + wService.Path;
                                             }
                                         }
                                         else
@@ -511,7 +529,6 @@ namespace CpuInfoClient
                     }
 
                     wService.connectionID = wConnectionID;
-                    Console.WriteLine(wService.serviceName + " - " + wService.serviceVersion);
                     wServiceList.Add(wService);
                     cont++;
                 }
@@ -533,10 +550,7 @@ namespace CpuInfoClient
             var pais = (ConfigurationManager.AppSettings["pais"]).ToUpper().ToString();
             var iisManager = new ServerManager();
             SiteCollection sites = iisManager.Sites;
-            Console.WriteLine("Listado de Sitios IIS");
-            Console.WriteLine("======= == ======");
-            Console.WriteLine("Se detectaron: {0} sitios", sites.Count);
-            Console.WriteLine("==========================");
+            Console.WriteLine(DateTime.Now.ToString() + " - Listado de Sitios IIS: Se detectaron: {0} sitios", sites.Count);
             if (sites.Count > 0)
             {
                 wList = new List<SitesIISBE>();
@@ -565,7 +579,7 @@ namespace CpuInfoClient
                     wSite.siteState = site.State.ToString();
                     wSite.sitePath = virtualRoot.PhysicalPath;
                     wList.Add(wSite);
-                    Console.WriteLine(string.Format("Id Sitio: {0} - Nombre del Sitio: {1} \n Enlaces:  {2} - Estado: {3} - Ruta: {4}", site.Id, site.Name, binding, site.State, virtualRoot.PhysicalPath));
+                    //Console.WriteLine(string.Format("Id Sitio: {0} - Nombre del Sitio: {1} \n Enlaces:  {2} - Estado: {3} - Ruta: {4}", site.Id, site.Name, binding, site.State, virtualRoot.PhysicalPath));
                 }
             }
 
@@ -574,20 +588,23 @@ namespace CpuInfoClient
 
         #region NetFramework
         //Writes the version
-        private static void WriteVersion(string version, string spLevel = "")
+        private static string WriteVersion(string version, string spLevel = "")
         {
             version = version.Trim();
             if (string.IsNullOrEmpty(version))
-                return;
+                return string.Empty;
 
             string spLevelString = "";
             if (!string.IsNullOrEmpty(spLevel))
                 spLevelString = " Service Pack " + spLevel;
 
             Console.WriteLine($"{version}{spLevelString}");
+            return $"{version}{spLevelString}";
         }
-        private static void Get1To45VersionFromRegistry()
+
+        private static string Get1To45VersionFromRegistry()
         {
+            StringBuilder wListFramework = new StringBuilder();
             Console.WriteLine("Buscamos los .NET Framework < 4.5");
             // Opens the registry key for the .NET Framework entry.
             using (RegistryKey ndpKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\NET Framework Setup\NDP\"))
@@ -612,12 +629,12 @@ namespace CpuInfoClient
                         // Get the installation flag, or an empty string if there is none.
                         string install = versionKey.GetValue("Install", "").ToString();
                         if (string.IsNullOrEmpty(install)) // No install info; it must be in a child subkey.
-                            WriteVersion(name);
+                            wListFramework.AppendLine(WriteVersion(name));
                         else
                         {
                             if (!(string.IsNullOrEmpty(sp)) && install == "1")
                             {
-                                WriteVersion(name, sp);
+                                wListFramework.AppendLine(WriteVersion(name, sp));
                             }
                         }
                         if (!string.IsNullOrEmpty(name))
@@ -633,46 +650,44 @@ namespace CpuInfoClient
 
                             install = subKey.GetValue("Install", "").ToString();
                             if (string.IsNullOrEmpty(install)) //No install info; it must be later.
-                                WriteVersion(name);
+                                wListFramework.AppendLine(WriteVersion(name));
                             else
                             {
                                 if (!(string.IsNullOrEmpty(sp)) && install == "1")
                                 {
-                                    WriteVersion(name, sp);
+                                    wListFramework.AppendLine(WriteVersion(name, sp));
                                 }
                                 else if (install == "1")
                                 {
-                                    WriteVersion(name);
+                                    wListFramework.AppendLine(WriteVersion(name));
                                 }
                             }
                         }
                     }
                 }
             }
+            return wListFramework.ToString();
         }
-        private static void Get45PlusFromRegistry()
+        private static string Get45PlusFromRegistry()
         {
+            StringBuilder wListFramework = new StringBuilder();
             Console.WriteLine("Buscamos los .NET Framework > 4.5");
             const string subkey = @"SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full\";
 
             using (RegistryKey ndpKey = Registry.LocalMachine.OpenSubKey(subkey))
             {
                 if (ndpKey == null)
-                    return;
+                    return string.Empty;
                 //First check if there's an specific version indicated
                 if (ndpKey.GetValue("Version") != null)
                 {
-                    WriteVersion(ndpKey.GetValue("Version").ToString());
+                    wListFramework.AppendLine(WriteVersion(ndpKey.GetValue("Version").ToString()));
                 }
                 else
                 {
                     if (ndpKey != null && ndpKey.GetValue("Release") != null)
                     {
-                        WriteVersion(
-                            CheckFor45PlusVersion(
-                                    (int)ndpKey.GetValue("Release")
-                                )
-                        );
+                        wListFramework.AppendLine((WriteVersion(CheckFor45PlusVersion((int)ndpKey.GetValue("Release")))));
                     }
                 }
             }
@@ -725,8 +740,119 @@ namespace CpuInfoClient
                 // that 4.5 or later is installed.
                 return "";
             }
+
+            return wListFramework.ToString();
+        }
+        #endregion
+
+        #region Node
+        private static List<ProcessBE> getInfoNode()
+        {
+            List<ProcessBE> wListProcessNode = new List<ProcessBE>();
+            ProcessBE wProcess = null;
+            string wID = string.Empty;
+            string wName = string.Empty;
+            string wCommandLine = string.Empty;
+            string wText = string.Empty;
+            string wHandles = string.Empty;
+            string wThreads = string.Empty;
+            string wMemory = string.Empty;
+            string wCPU = string.Empty;
+            string wDescription = string.Empty;
+            string wOSName = string.Empty;
+            Process p = null;
+
+            var pais = (ConfigurationManager.AppSettings["pais"]).ToUpper().ToString();
+
+            ManagementClass mngmtClass = new ManagementClass("Win32_Process");
+            foreach (ManagementObject o in mngmtClass.GetInstances())
+            {
+                //Obtengo los datos del proceso
+                if (!o["Name"].ToString().ToLower().Contains("node.exe"))
+                    continue;
+
+                if ((o["CommandLine"] != null))
+                    if (!o["CommandLine"].ToString().Contains("app.js"))
+                        if (!o["CommandLine"].ToString().Contains("server.js"))
+                            continue;
+
+
+                wText = string.Empty;
+                if (o["ProcessId"] != null)
+                {
+                    wID = o["ProcessId"].ToString();
+                    p = Process.GetProcessById(int.Parse(wID));
+                }
+                wName = o["Name"].ToString();
+
+                wDescription = o["Description"].ToString();
+
+                if (o["CommandLine"] != null)
+                {
+                    wCommandLine = o["CommandLine"].ToString();
+                }
+
+                if (o["HandleCount"] != null)
+                    wHandles = o["HandleCount"].ToString();
+                if (o["ThreadCount"] != null)
+                    wThreads = o["ThreadCount"].ToString();
+
+
+
+                string instanceName = GetProcessInstanceName(int.Parse(wID));
+                try
+                {
+                    wProcess = new ProcessBE();
+                    wProcess.pais = pais;
+                    wProcess.machineName = System.Environment.MachineName;
+                    wProcess.processID = wID;
+                    wProcess.processName = wName;
+                    wProcess.instanceName = instanceName;
+                    wProcess.commandLine = wCommandLine;
+
+                    wListProcessNode.Add(wProcess);
+
+                    //Console.WriteLine("ID: " + wID + " - Nombre: " + wName + " - Instancia: " + instanceName + " - " + wCommandLine);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(DateTime.Now.ToString() + " Error: " + ex.Message);
+                }
+            }
+
+            return wListProcessNode;
         }
 
+        private static string GetProcessInstanceName(int pid)
+        {
+            try
+            {
+                PerformanceCounterCategory cat = new PerformanceCounterCategory("Process");
+                string[] instances = cat.GetInstanceNames();
+                foreach (string instance in instances)
+                {
+                    if (!instance.ToLower().Contains("node"))
+                        continue;
+
+                    using (PerformanceCounter cnt = new PerformanceCounter("Process",
+                         "ID Process", instance, true))
+                    {
+                        int val = (int)cnt.RawValue;
+                        if (val == pid)
+                        {
+                            return instance;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(DateTime.Now.ToString() + " - Error en la busqueda de Procesos: " + ex.Message);
+                return string.Empty;
+            }
+
+            return string.Empty;
+        }
         #endregion
     }
 }

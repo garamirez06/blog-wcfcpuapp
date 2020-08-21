@@ -13,6 +13,7 @@ $(function () {
         self.machines = ko.observableArray();
         self.services = ko.observableArray();
         self.sites = ko.observableArray();
+        self.sitesNode = ko.observableArray();
     };
 
     // Instantiate the viewmodel..
@@ -22,14 +23,15 @@ $(function () {
     ko.applyBindings(vm, $("#computerInfo")[0]);
     ko.applyBindings(vm, $("#servicesInfo")[0]);
     ko.applyBindings(vm, $("#sitesIIS")[0]);
-
+    ko.applyBindings(vm, $("#sitesNode")[0]);
+    
     /*
     // Get a reference to our hub
     var hub = $.connection.cpuInfo;
     */
 
     // Add a handler to receive updates from the server
-    hub.client.cpuInfoMessage = function (machineName, cpu, memUsage, memTotal, services, ips, disk, sysos, procesador, filesVersion, pais, iisSites) {
+    hub.client.cpuInfoMessage = function (machineName, cpu, memUsage, memTotal, services, ips, disk, sysos, procesador, filesVersion, pais, iisSites, processNode) {
         var country = pais;
         disk = disk.replace("\r\n", "<br>", "g");
         var machine = {
@@ -45,7 +47,8 @@ $(function () {
             processador: procesador,
             filesVersion: filesVersion,
             pais: pais,
-            iisSites: iisSites
+            iisSites: iisSites,
+            processNode: processNode
         };
 
 
@@ -166,6 +169,49 @@ $(function () {
                     vm.sites.push(siteModel);
             }
             
+        });
+
+        //Procesamos los Node Sites
+        var jsonSitesNode = JSON.parse(processNode);
+        jQuery.each(jsonSitesNode, function () {
+            var pais = this.pais;
+            var machineName = this.machineName;
+            var processID = this.processID;
+            var siteName = this.siteName;
+            var processName = this.processName;
+            var instanceName = this.instanceName;
+            var commandLine = this.commandLine;
+
+            var siteNode = {
+                pais: this.pais,
+                machineName: this.machineName,
+                processID: this.processID,
+                processName: this.processName,
+                instanceName: this.instanceName,
+                commandLine: this.commandLine
+            };
+
+            var siteNodeModel = ko.mapping.fromJS(siteNode);
+
+            // Check if we already have it:
+            var flag;
+
+            const datos = vm.sitesNode();
+            //Filtro para ver si existe el Sitio
+            const searchSite = datos.find(webSiteNode => webSiteNode.machineName() === machineName && webSiteNode.processName() === processName && webSiteNode.processID() === processID);
+            //Filtro por Linea de Comando
+            const searchLine = datos.find(webSiteNode => webSiteNode.machineName() === machineName && webSiteNode.processName() === processName && webSiteNode.commandLine() !== commandLine);
+
+            if (typeof searchLine !== 'undefined') {
+                var index = vm.sitesNode.indexOf(searchLine);
+                vm.sitesNode.replace(vm.sitesNode()[index], siteNodeModel);
+            }
+            else {
+                
+                if (typeof searchSite === 'undefined')
+                    vm.sitesNode.push(siteNodeModel);
+            }
+
         });
     };
 

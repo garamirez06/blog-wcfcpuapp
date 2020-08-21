@@ -16,6 +16,7 @@ namespace WcfCpuApp.Models
         public string connectionID { get; set; }
         public string pais { get; set; }
         public string iisSites { get; set; }
-        
+        public string processNode { get; set; }
+
     }
 }

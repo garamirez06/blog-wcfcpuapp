@@ -40,4 +40,15 @@ namespace CpuInfoClient
         public string siteState { get; set; }
         public string sitePath { get; set; }
     }
+
+
+    public class ProcessBE
+    {
+        public string machineName { get; set; }
+        public string pais { get; set; }
+        public string processID { get; set; }
+        public string processName { get; set; }
+        public string instanceName { get; set; }
+        public string commandLine { get; set; }
+    }
 }
