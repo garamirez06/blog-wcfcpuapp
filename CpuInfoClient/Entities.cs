@@ -32,6 +32,8 @@ namespace CpuInfoClient
 
     public class SitesIISBE
     {
+        public string machineName { get; set; }
+        public string pais { get; set; }
         public long siteID { get; set; }
         public string siteName { get; set; }
         public string siteBinding { get; set; }

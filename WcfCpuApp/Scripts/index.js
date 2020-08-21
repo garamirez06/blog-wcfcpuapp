@@ -12,6 +12,7 @@ $(function () {
         // Collection of machines that are connected
         self.machines = ko.observableArray();
         self.services = ko.observableArray();
+        self.sites = ko.observableArray();
     };
 
     // Instantiate the viewmodel..
@@ -20,6 +21,7 @@ $(function () {
     // .. and bind it to the view
     ko.applyBindings(vm, $("#computerInfo")[0]);
     ko.applyBindings(vm, $("#servicesInfo")[0]);
+    ko.applyBindings(vm, $("#sitesIIS")[0]);
 
     /*
     // Get a reference to our hub
@@ -27,7 +29,7 @@ $(function () {
     */
 
     // Add a handler to receive updates from the server
-    hub.client.cpuInfoMessage = function (machineName, cpu, memUsage, memTotal, services, ips, disk, sysos, procesador, filesVersion, pais) {
+    hub.client.cpuInfoMessage = function (machineName, cpu, memUsage, memTotal, services, ips, disk, sysos, procesador, filesVersion, pais, iisSites) {
         var country = pais;
         disk = disk.replace("\r\n", "<br>", "g");
         var machine = {
@@ -42,7 +44,8 @@ $(function () {
             sysos: sysos,
             processador: procesador,
             filesVersion: filesVersion,
-            pais: pais
+            pais: pais,
+            iisSites: iisSites
         };
 
 
@@ -93,17 +96,6 @@ $(function () {
             // Check if we already have it:
             var flag;
 
-            /*
-            var match = vm.services().forEach(function (item) {
-                const datos = vm.services();
-                const search = datos.find(serv => serv.machineName = machineName && serv.serviceName == serviceName && serv.status === status);
-                if (item.machineName() === machineName && item.serviceName() === serviceName) {
-                    flag = true;
-                }
-            });
-            */
-
-
             const datos = vm.services();
             //Filtro para ver si existe el servicio
             const searchService = datos.find(serv => serv.machineName() === machineName && serv.serviceName() === serviceName && serv.status() === status);
@@ -111,7 +103,7 @@ $(function () {
             const searchStatus = datos.find(serv => serv.machineName() === machineName && serv.serviceName() === serviceName && serv.status() !== status);
             //Filtro por Version
             const searchVersion = datos.find(serv => serv.machineName() === machineName && serv.serviceName() === serviceName && serv.serviceVersion() !== serviceVersion);
-            
+
             if (typeof searchStatus !== 'undefined') {
                 var index = vm.services.indexOf(searchStatus);
                 vm.services.replace(vm.services()[index], serviceModel);
@@ -125,15 +117,55 @@ $(function () {
                 var index2 = vm.services.indexOf(searchVersion);
                 vm.services.replace(vm.services()[index2], serviceModel);
             }
-            
+        });
 
-            //match = flag;
-            //if (!match)
-            //    vm.services.push(serviceModel);
-            //else {
-            //    var index = vm.services.indexOf(match);
-            //    vm.services.replace(vm.services()[index], serviceModel);
-            //}
+        //Procesamos los IIS Sites
+        var jsonSites = JSON.parse(iisSites);
+        jQuery.each(jsonSites, function () {
+            var pais = this.pais;
+            var machineName = this.machineName;
+            var siteID = this.siteID;
+            var siteName = this.siteName;
+            var siteBinding = this.siteBinding;
+            var siteState = this.siteState;
+            var sitePath = this.sitePath;
+            
+            var site = {
+                pais: this.pais,
+                machineName: this.machineName,
+                siteID: this.siteID,
+                siteName: this.siteName,
+                siteBinding: this.siteBinding,
+                siteState: this.siteState,
+                sitePath: this.sitePath
+            };
+
+            var siteModel = ko.mapping.fromJS(site);
+
+            // Check if we already have it:
+            var flag;
+
+            const datos = vm.sites();
+            //Filtro para ver si existe el Sitio
+            const searchSite = datos.find(webSite => webSite.machineName() === machineName && webSite.siteName() === siteName && webSite.siteState() === siteState);
+            //Filtro por Estado
+            const searchStatus = datos.find(webSite => webSite.machineName() === machineName && webSite.siteName() === siteName && webSite.siteState() !== siteState);
+            //Filtro por Enlace
+            const searchBinding = datos.find(webSite => webSite.machineName() === machineName && webSite.siteName() === siteName && webSite.siteBinding() !== siteBinding);
+
+            if (typeof searchStatus !== 'undefined') {
+                var index = vm.sites.indexOf(searchStatus);
+                vm.sites.replace(vm.sites()[index], siteModel);
+            }
+            else {
+                if (typeof searchBinding !== 'undefined') {
+                    var index2 = vm.sites.indexOf(searchBinding);
+                    vm.sites.replace(vm.sites()[index2], siteModel);
+                }
+                if (typeof searchSite === 'undefined')
+                    vm.sites.push(siteModel);
+            }
+            
         });
     };
 

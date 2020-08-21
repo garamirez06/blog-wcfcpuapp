@@ -15,5 +15,7 @@ namespace WcfCpuApp.Models
         public string filesVersion { get; set; }
         public string connectionID { get; set; }
         public string pais { get; set; }
+        public string iisSites { get; set; }
+        
     }
 }

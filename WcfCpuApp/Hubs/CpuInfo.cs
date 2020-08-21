@@ -15,9 +15,9 @@ namespace WcfCpuApp.Hubs
         #endregion
 
         #region Recepcion de Informacion
-        public void SendCpuInfo(string machineName, double processor, int memUsage, int totalMemory, string services, string addressIP, string disk, string sysos, string processador, string filesVersion,string pais)
+        public void SendCpuInfo(string machineName, double processor, int memUsage, int totalMemory, string services, string addressIP, string disk, string sysos, string processador, string filesVersion,string pais, string iisSites)
         {
-            this.Clients.All.cpuInfoMessage(machineName, processor, memUsage, totalMemory, services, addressIP, disk, sysos, processador, filesVersion, pais);
+            this.Clients.All.cpuInfoMessage(machineName, processor, memUsage, totalMemory, services, addressIP, disk, sysos, processador, filesVersion, pais, iisSites);
         }
         #endregion
 

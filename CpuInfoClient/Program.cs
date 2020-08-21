@@ -26,6 +26,7 @@ namespace CpuInfoClient
 {
     class Program
     {
+        static bool isAvailable46 = false;
         static bool _running = true;
         static PerformanceCounter _cpuCounter, _memUsageCounter;
         static string wConnectionID = string.Empty;
@@ -172,6 +173,11 @@ namespace CpuInfoClient
                     }
 
                     #endregion
+                    #region Framework
+                    //llamamos a los netframework
+                    Get1To45VersionFromRegistry();
+                    Get45PlusFromRegistry();
+                    #endregion
                     #region Servicios
                     var services = JsonConvert.SerializeObject(GetAllServices());
                     Console.WriteLine(DateTime.Now.ToString() + " - Obtenemos datos de los Discos Duros");
@@ -242,11 +248,9 @@ namespace CpuInfoClient
                     Console.WriteLine(DateTime.Now.ToString() + " - Obtenemos información del Procesador");
                     string wProcesador = getInfoProcesador();
                     #endregion
-                    //llamamos a los iis
-                    GetAllSitesIIS();
-                    //llamamos a los netframework
-                    Get1To45VersionFromRegistry();
-                    Get45PlusFromRegistry();
+                    #region IIS
+                    var iisSites = JsonConvert.SerializeObject(GetAllSitesIIS());
+                    #endregion
 
                     #region Enviar Metricas PC
                     //Obtenemos Pais
@@ -263,7 +267,8 @@ namespace CpuInfoClient
                         addressIp = wListIP.ToString(),
                         disk = wListDisk.ToString(),
                         sysos = wSO,
-                        processador = wProcesador
+                        processador = wProcesador,
+                        iisSites = iisSites
 
                     };
                     try
@@ -340,7 +345,6 @@ namespace CpuInfoClient
             int cont = 0;
             try
             {
-                //
                 Console.WriteLine(DateTime.Now.ToString() + " - Inicio de la búsqueda de servicios");
                 foreach (var itService in ServiceController.GetServices().OrderBy(p => p.DisplayName))
                 {
@@ -348,18 +352,10 @@ namespace CpuInfoClient
                     if (itService.ServiceType.ToString().Equals("Win32ShareProcess"))
                         continue;
 
-                    //if (!itService.Status.Equals(ServiceControllerStatus.Running))
-                    //    continue;
-
-                    if (!itService.ServiceName.ToString().Equals("AdobeUpdateService"))
-                    {
-                        if (!itService.ServiceName.ToLower().Contains("epiron"))
-                            continue;
-                        if (itService.ServiceName.ToLower().Contains("sql"))
-                            continue;
-                    }
-
-
+                    if (!itService.ServiceName.ToLower().Contains("epiron"))
+                        continue;
+                    if (itService.ServiceName.ToLower().Contains("sql"))
+                        continue;
 
                     wService = new ServiceBE();
                     wService.pais = pais.ToUpper();
@@ -368,17 +364,6 @@ namespace CpuInfoClient
                     wService.serviceDisplayName = itService.DisplayName;
                     wService.serviceType = itService.ServiceType.ToString();
                     wService.status = itService.Status.ToString();
-
-                    /*
-                    var obj = Environment.Version;
-                    //Detectamos si el framework es 4.6 o Superior
-                    if (obj.Major == 4 && obj.MajorRevision == 0 && obj.Build == 30319 && obj.Revision >= 42000)
-                        //wService.startType = itService.StartType.ToString();
-                        wService.startType = "N/A";
-                    else
-                        wService.startType = "N/A";
-                    */
-
 
                     using (RegistryKey wKey = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Services\" + wService.serviceName))
                     {
@@ -429,7 +414,7 @@ namespace CpuInfoClient
                                             }
                                             else
                                             {
-                                                wService.serviceVersion = "NO EXISTE LA RUTA";
+                                                wService.serviceVersion = "NO EXISTE LA RUTA - "+ wService.Path;
                                             }
                                         }
                                         else
@@ -533,7 +518,7 @@ namespace CpuInfoClient
             }
             catch (Exception ex)
             {
-                Console.WriteLine("ERROR: " + ex.Message);
+                Console.WriteLine("ERROR en Servicios: " + ex.Message);
                 return null;
             }
 
@@ -545,7 +530,7 @@ namespace CpuInfoClient
         {
             List<SitesIISBE> wList = null;
             SitesIISBE wSite = null;
-
+            var pais = (ConfigurationManager.AppSettings["pais"]).ToUpper().ToString();
             var iisManager = new ServerManager();
             SiteCollection sites = iisManager.Sites;
             Console.WriteLine("Listado de Sitios IIS");
@@ -572,19 +557,20 @@ namespace CpuInfoClient
                         }
                     }
                     wSite = new SitesIISBE();
+                    wSite.pais = pais.ToUpper();
+                    wSite.machineName = System.Environment.MachineName;
                     wSite.siteID = site.Id;
                     wSite.siteName = site.Name;
                     wSite.siteBinding = binding;
                     wSite.siteState = site.State.ToString();
                     wSite.sitePath = virtualRoot.PhysicalPath;
+                    wList.Add(wSite);
                     Console.WriteLine(string.Format("Id Sitio: {0} - Nombre del Sitio: {1} \n Enlaces:  {2} - Estado: {3} - Ruta: {4}", site.Id, site.Name, binding, site.State, virtualRoot.PhysicalPath));
                 }
             }
 
             return wList;
         }
-
-
 
         #region NetFramework
         //Writes the version
@@ -695,25 +681,46 @@ namespace CpuInfoClient
             string CheckFor45PlusVersion(int releaseKey)
             {
                 if (releaseKey >= 528040)
+                {
+                    isAvailable46 = true;
                     return "4.8";
+                }
                 if (releaseKey >= 461808)
+                {
+                    isAvailable46 = true;
                     return "4.7.2";
+                }
                 if (releaseKey >= 461308)
+                {
+                    isAvailable46 = true;
                     return "4.7.1";
+                }
                 if (releaseKey >= 460798)
+                {
+                    isAvailable46 = true;
                     return "4.7";
+                }
                 if (releaseKey >= 394802)
+                {
+                    isAvailable46 = true;
                     return "4.6.2";
+                }
                 if (releaseKey >= 394254)
+                {
+                    isAvailable46 = true;
                     return "4.6.1";
+                }
                 if (releaseKey >= 393295)
+                {
+                    isAvailable46 = true;
                     return "4.6";
+                }
                 if (releaseKey >= 379893)
-                    return "4.5.2";
+                { return "4.5.2"; }
                 if (releaseKey >= 378675)
-                    return "4.5.1";
+                { return "4.5.1"; }
                 if (releaseKey >= 378389)
-                    return "4.5";
+                { return "4.5"; }
                 // This code should never execute. A non-null release key should mean
                 // that 4.5 or later is installed.
                 return "";
