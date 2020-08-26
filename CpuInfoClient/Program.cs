@@ -115,12 +115,14 @@ namespace CpuInfoClient
                 _cpuCounter.InstanceName = "_Total";
                 Console.WriteLine(DateTime.Now.ToString() + " - Creamos Contadores de Perfomance para RAM");
                 _memUsageCounter = new PerformanceCounter("Memory", "Available KBytes");
+                
                 // Create a new thread to start polling and sending the data
                 #endregion
                 pollingThread = new Thread(new ParameterizedThreadStart(RunPollingThread));
                 pollingThread.Start();
-
+                Console.WriteLine("*****************************************************");
                 Console.WriteLine("Presione una tecla para detener el proceso y salir...");
+                Console.WriteLine("*****************************************************");
                 Console.ReadKey();
 
                 Console.WriteLine("Deteniendo thread..");
@@ -771,10 +773,9 @@ namespace CpuInfoClient
                 if (!o["Name"].ToString().ToLower().Contains("node.exe"))
                     continue;
 
-                if ((o["CommandLine"] != null))
-                    if (!o["CommandLine"].ToString().Contains("app.js"))
-                        if (!o["CommandLine"].ToString().Contains("server.js"))
-                            continue;
+                //if ((o["CommandLine"] != null))
+                //    if (!o["CommandLine"].ToString().Contains("app.js") || !o["CommandLine"].ToString().Contains("server.js"))
+                //            continue;
 
 
                 wText = string.Empty;

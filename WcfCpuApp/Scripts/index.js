@@ -1,5 +1,6 @@
 ﻿// Get a reference to our hub
 var hub = $.connection.cpuInfo;
+var mono = "mono";
 
 $(function () {
     // The view model that is bound to our view
@@ -24,7 +25,7 @@ $(function () {
     ko.applyBindings(vm, $("#servicesInfo")[0]);
     ko.applyBindings(vm, $("#sitesIIS")[0]);
     ko.applyBindings(vm, $("#sitesNode")[0]);
-    
+
     /*
     // Get a reference to our hub
     var hub = $.connection.cpuInfo;
@@ -98,28 +99,40 @@ $(function () {
 
             // Check if we already have it:
             var flag;
+            /*
+             * //Filtro para combos
+            if (mono !== pais) {
+                console.log("NO hay resultados");
+                for (var i = 0; i < vm.services().length; i++) {
+                    vm.services.remove(vm.services()[i]);
+                }
 
-            const datos = vm.services();
-            //Filtro para ver si existe el servicio
-            const searchService = datos.find(serv => serv.machineName() === machineName && serv.serviceName() === serviceName && serv.status() === status);
-            //Filtro por Estado
-            const searchStatus = datos.find(serv => serv.machineName() === machineName && serv.serviceName() === serviceName && serv.status() !== status);
-            //Filtro por Version
-            const searchVersion = datos.find(serv => serv.machineName() === machineName && serv.serviceName() === serviceName && serv.serviceVersion() !== serviceVersion);
+            }
+            */
+                const datos = vm.services();
+                //Filtro para ver si existe el servicio
+                const searchService = datos.find(serv => serv.machineName() === machineName && serv.serviceName() === serviceName && serv.status() === status);
+                //Filtro por Estado
+                const searchStatus = datos.find(serv => serv.machineName() === machineName && serv.serviceName() === serviceName && serv.status() !== status);
+                //Filtro por Version
+                const searchVersion = datos.find(serv => serv.machineName() === machineName && serv.serviceName() === serviceName && serv.serviceVersion() !== serviceVersion);
 
-            if (typeof searchStatus !== 'undefined') {
-                var index = vm.services.indexOf(searchStatus);
-                vm.services.replace(vm.services()[index], serviceModel);
-            }
-            else {
-                if (typeof searchService === 'undefined')
-                    vm.services.push(serviceModel);
-            }
+                if (typeof searchStatus !== 'undefined') {
+                    var index = vm.services.indexOf(searchStatus);
+                    vm.services.replace(vm.services()[index], serviceModel);
+                }
+                else {
+                    if (typeof searchService === 'undefined')
+                        vm.services.push(serviceModel);
+                }
 
-            if (typeof searchVersion !== 'undefined') {
-                var index2 = vm.services.indexOf(searchVersion);
-                vm.services.replace(vm.services()[index2], serviceModel);
-            }
+                if (typeof searchVersion !== 'undefined') {
+                    var index2 = vm.services.indexOf(searchVersion);
+                    vm.services.replace(vm.services()[index2], serviceModel);
+                }
+            
+
+            
         });
 
         //Procesamos los IIS Sites
@@ -132,7 +145,7 @@ $(function () {
             var siteBinding = this.siteBinding;
             var siteState = this.siteState;
             var sitePath = this.sitePath;
-            
+
             var site = {
                 pais: this.pais,
                 machineName: this.machineName,
@@ -168,7 +181,7 @@ $(function () {
                 if (typeof searchSite === 'undefined')
                     vm.sites.push(siteModel);
             }
-            
+
         });
 
         //Procesamos los Node Sites
@@ -200,14 +213,14 @@ $(function () {
             //Filtro para ver si existe el Sitio
             const searchSite = datos.find(webSiteNode => webSiteNode.machineName() === machineName && webSiteNode.processName() === processName && webSiteNode.processID() === processID);
             //Filtro por Linea de Comando
-            const searchLine = datos.find(webSiteNode => webSiteNode.machineName() === machineName && webSiteNode.processName() === processName && webSiteNode.commandLine() !== commandLine);
+            const searchLine = datos.find(webSiteNode => webSiteNode.machineName() === machineName && webSiteNode.processName() === processName && webSiteNode.processID() === processID && webSiteNode.commandLine() !== commandLine);
 
             if (typeof searchLine !== 'undefined') {
                 var index = vm.sitesNode.indexOf(searchLine);
                 vm.sitesNode.replace(vm.sitesNode()[index], siteNodeModel);
             }
             else {
-                
+
                 if (typeof searchSite === 'undefined')
                     vm.sitesNode.push(siteNodeModel);
             }
