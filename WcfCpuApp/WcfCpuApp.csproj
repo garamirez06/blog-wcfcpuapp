@@ -404,11 +404,17 @@
     <Content Include="Content\bootstrap-grid.css.map" />
     <Content Include="Content\DataTables\Buttons-1.6.2\css\common.scss" />
     <Content Include="Content\DataTables\Buttons-1.6.2\css\mixins.scss" />
+    <Content Include="Content\KronaOne-Regular.ttf" />
     <None Include="Properties\PublishProfiles\falconMonitorIA - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\falconMonitorIA - ReadOnly - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\falconMonitorIA - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\IIS on Dev.pubxml" />
     <Content Include="Images\face.jpg" />
+    <Content Include="Images\falconIco.png" />
+    <Content Include="Images\falconYellow.png" />
+    <Content Include="Images\falconYellowWhite.png" />
+    <Content Include="Images\falconYellowWhite2.png" />
+    <Content Include="Images\monitor.png" />
     <Content Include="Scripts\bootstrap.bundle.js" />
     <Content Include="Scripts\bootstrap.bundle.min.js" />
     <Content Include="Scripts\bootstrap.esm.js" />

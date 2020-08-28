@@ -18,6 +18,8 @@
         outline: none;
         font-size: 11px;
         line-height: 1.1;
+        background-color: #FFCC00;
+        border-color: #FFCC00;
     }
 
         .active, .collapsible:hover {
@@ -30,25 +32,35 @@
         overflow: hidden;
         background-color: #f1f1f1;
     }
-</style>
 
-<div id="computerInfo" class="container-fluid">
-    <div class="container-fluid" style="background-color: black;height: 250px;">
-        <div class="row">
-            <div class="col" style="margin-top:7%; margin-bottom:5%;">
-                <h1 class="text-center" style="color: white;">FALCON</h1>
-                <h2 class="text-center" style="color: white;">Monitor en Tiempo Real</h2>
-            </div>
-            <div class="col-6">
-                <img src="~/Content/images/logoEpiron.png" alt="Logo Epiron-Falcon" style="height:250px" />
-            </div>
+    .btn-warning {
+        background-color: #FFCC00;
+        border-color: #FFCC00;
+    }
+
+    @@font-face {
+        font-family: "CustomFont";
+        src: url("/Content/KronaOne-Regular.ttf");
+    }
+
+    .titulo {
+        font-family: CustomFont;
+    }
+</style>
+<div id="header" class="container-fluid">
+    <div class="row">
+        <div class="col">
+            <img class="img-fluid" src="~/Images/monitor.png" alt="FALCON" />
         </div>
     </div>
+</div>
+
+<div id="computerInfo" class="container-fluid">
     <div class="container-fluid">
         <div class="row">
-            <h3 data-bind="visible: connected" style="color:white">Lista de Servidores</h3>
+            <h3 data-bind="visible: connected" style="color:white">Servidores</h3>
         </div>
-        <button class="btn btn-primary" onclick="tableToExcel('tbMachines', 'Lista de Servidores')">Exportar a Excel</button>
+        <button class="btn btn-warning" onclick="tableToExcel('tbMachines', 'Servidores')">Exportar a Excel</button>
         <div class="row">
             <div class="table-responsive" style="background-color:white">
                 <table id="tbMachines" border="0" class="table table-striped table-hover">
@@ -95,9 +107,9 @@
 <div id="servicesInfo" class="container-fluid">
     <div class="container-fluid">
         <div class="row">
-            <h3 style="color:white">Lista de Servicios</h3>
+            <h3 style="color:white">Servicios</h3>
         </div>
-        <button class="btn btn-primary" onclick="tableToExcel('tbServices', 'Lista de Servicios')">Exportar a Excel</button>
+        <button class="btn btn-warning" onclick="tableToExcel('tbServices', 'Servicios')">Exportar a Excel</button>
         <div class="row">
             <div class="table-responsive" style="background-color:white">
                 <table id="tbServices" border="0" class="table table-striped table-hover">
@@ -144,9 +156,9 @@
 <div id="sitesIIS" class="container-fluid">
     <div class="container-fluid">
         <div class="row">
-            <h3 style="color:white">Lista de Sitios de IIS</h3>
+            <h3 style="color:white">Sitios de IIS</h3>
         </div>
-        <button class="btn btn-primary" onclick="tableToExcel('tbSitesIIS', 'Lista de Sitios de IIS')">Exportar a Excel</button>
+        <button class="btn btn-warning" onclick="tableToExcel('tbSitesIIS', 'Sitios de IIS')">Exportar a Excel</button>
         <div class="row">
             <div class="table-responsive" style="background-color:white">
                 <table id="tbSitesIIS" border="0" class="table table-striped table-hover">
@@ -183,9 +195,9 @@
 <div id="sitesNode" class="container-fluid">
     <div class="container-fluid">
         <div class="row">
-            <h3 style="color:white">Lista de Sitios de Node</h3>
+            <h3 style="color:white">Sitios de Node</h3>
         </div>
-        <button class="btn btn-primary" onclick="tableToExcel('tbSitesNode', 'Lista de Sitios de Node')">Exportar a Excel</button>
+        <button class="btn btn-warning" onclick="tableToExcel('tbSitesNode', 'Sitios de Node')">Exportar a Excel</button>
         <div class="row">
             <div class="table-responsive" style="background-color:white">
                 <table id="tbSitesNode" border="0" class="table table-striped table-hover">

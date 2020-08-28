@@ -10,7 +10,7 @@
     <title>Falcon - Monitor</title>
 
     <link href="~/Content/bootstrap.min.css" type="text/css" rel="stylesheet" />
-    <link rel="shortcut icon" type="image/jpg" href="~/Images/face.jpg" />
+    <link rel="shortcut icon" type="image/jpg" href="~/Images/falconIco.png" />
     <script src="~/Scripts/jquery-3.5.1.js"></script>
     <script src="~/Scripts/jquery.signalR-2.4.1.min.js"></script>
     <script src="/signalr/hubs"></script>
@@ -32,7 +32,7 @@
 
         @@media only screen and (max-width: 800px) {
             body {
-                width:700px;
+                width: 700px;
             }
         }
     </style>
@@ -40,5 +40,22 @@
         @RenderBody()
     </div>
     <script type="text/javascript" src="~/Scripts/ScriptCollapsing.js"></script>
+    <footer>
+        <div class="container-fluid">
+            <hr />
+            <div class="row">
+                <div>
+                    <p class="text-center" style="color:white;">
+                        ©
+                        <script>
+                            var fecha = new Date();
+                            document.write(fecha.getFullYear());
+                        </script>
+                        - Desarrollo: IA Konecta Argentina
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>
