@@ -24,7 +24,7 @@ using Newtonsoft.Json.Linq;
 
 namespace CpuInfoClient
 {
-    class Program
+    public class Program
     {
         static bool isAvailable46 = false;
         static bool _running = true;
@@ -115,7 +115,7 @@ namespace CpuInfoClient
                 _cpuCounter.InstanceName = "_Total";
                 Console.WriteLine(DateTime.Now.ToString() + " - Creamos Contadores de Perfomance para RAM");
                 _memUsageCounter = new PerformanceCounter("Memory", "Available KBytes");
-                
+
                 // Create a new thread to start polling and sending the data
                 #endregion
                 pollingThread = new Thread(new ParameterizedThreadStart(RunPollingThread));
