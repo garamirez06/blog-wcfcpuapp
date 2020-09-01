@@ -1,6 +1,6 @@
 ﻿namespace ServicioMonitor
 {
-    partial class Service1
+    partial class ServiceMonitor
     {
         /// <summary> 
         /// Variable del diseñador necesaria.
@@ -29,15 +29,23 @@
         private void InitializeComponent()
         {
             this.serviceController1 = new System.ServiceProcess.ServiceController();
+            this.eventosSistemas = new System.Diagnostics.EventLog();
+            ((System.ComponentModel.ISupportInitialize)(this.eventosSistemas)).BeginInit();
             // 
-            // Service1
+            // eventosSistemas
+            // 
+            this.eventosSistemas.Log = "Application";
+            // 
+            // ServiceMonitor
             // 
             this.ServiceName = "Service1";
+            ((System.ComponentModel.ISupportInitialize)(this.eventosSistemas)).EndInit();
 
         }
 
         #endregion
 
         private System.ServiceProcess.ServiceController serviceController1;
+        private System.Diagnostics.EventLog eventosSistemas;
     }
 }

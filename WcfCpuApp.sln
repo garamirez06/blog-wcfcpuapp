@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AgenteManager", "AgenteMana
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServicioMonitor", "ServicioMonitor\ServicioMonitor.csproj", "{7576068D-C33C-4458-9C13-EDA7465D232A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Entities\Common.csproj", "{FF5DFADD-0BAE-4470-863F-C0590E37D8F0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csproj", "{FF5DFADD-0BAE-4470-863F-C0590E37D8F0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

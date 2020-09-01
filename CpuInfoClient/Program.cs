@@ -49,6 +49,7 @@ namespace CpuInfoClient
         }
         static void Main(string[] args)
         {
+
             // Hello!
             Console.WriteLine("Falcon Agent - Captura de Información en Tiempo Real");
             Console.WriteLine("----------------------------------------------------");

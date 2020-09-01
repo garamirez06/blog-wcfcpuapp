@@ -17,7 +17,7 @@ namespace ServicioMonitor
             ServiceBase[] ServicesToRun;
             ServicesToRun = new ServiceBase[]
             {
-                new Service1()
+                new ServiceMonitor()
             };
             ServiceBase.Run(ServicesToRun);
         }

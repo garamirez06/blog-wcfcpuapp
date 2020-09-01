@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.serviceProcessInstaller1 = new System.ServiceProcess.ServiceProcessInstaller();
-            this.serviceInstaller1 = new System.ServiceProcess.ServiceInstaller();
+            this.FalconMonitor = new System.ServiceProcess.ServiceInstaller();
             // 
             // serviceProcessInstaller1
             // 
@@ -37,21 +37,23 @@
             this.serviceProcessInstaller1.Password = null;
             this.serviceProcessInstaller1.Username = null;
             // 
-            // serviceInstaller1
+            // FalconMonitor
             // 
-            this.serviceInstaller1.ServiceName = "Service1";
+            this.FalconMonitor.Description = "FalconMonitor";
+            this.FalconMonitor.DisplayName = "FalconMonitor";
+            this.FalconMonitor.ServiceName = "FalconMonitor";
             // 
             // ProjectInstaller
             // 
             this.Installers.AddRange(new System.Configuration.Install.Installer[] {
             this.serviceProcessInstaller1,
-            this.serviceInstaller1});
+            this.FalconMonitor});
 
         }
 
         #endregion
 
         private System.ServiceProcess.ServiceProcessInstaller serviceProcessInstaller1;
-        private System.ServiceProcess.ServiceInstaller serviceInstaller1;
+        private System.ServiceProcess.ServiceInstaller FalconMonitor;
     }
 }
