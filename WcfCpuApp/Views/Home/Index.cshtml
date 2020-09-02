@@ -46,204 +46,183 @@
     .titulo {
         font-family: CustomFont;
     }
+
+    #header {
+        margin-bottom: 40px;
+    }
 </style>
 <div id="header" class="container-fluid">
     <div class="row">
         <div class="col">
-            <img class="img-fluid" src="~/Images/falconYellowWhite3.png" alt="FALCON" />
+            <img id="imgFalconLogo" class="img-fluid" src="~/Images/falconYellowWhite3.png" alt="FALCON" />
         </div>
     </div>
 </div>
 
-<div id="computerInfo" class="container-fluid">
-    <div class="container-fluid">
-        <div class="row">
-            <h3 data-bind="visible: connected" style="color:white">Servidores</h3>
-        </div>
-        <button class="btn btn-warning" onclick="tableToExcel('tbMachines', 'Servidores')">Exportar a Excel</button>
-        <div class="row">
-            <div class="table-responsive" style="background-color:white">
-                <table id="tbMachines" border="0" class="table table-striped table-hover">
-                    <thead>
-                        <tr>
-                            <th>País</th>
-                            <th>Servidor</th>
-                            <th>IP</th>
-                            <th>CPU %</th>
-                            <th>Memoria Utilizada (Mb)</th>
-                            <th>Memoria Total(Mb)</th>
-                            <th>Mem Disp %</th>
-                            <th>Disco Duro</th>
-                            <th>Sistema Operativo</th>
-                            <th>Procesador</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- ko foreach: machines -->
-                        <tr data-bind="css: { highCpu: cpu() > 90 }">
-                            <td data-bind="text: pais"></td>
-                            <td data-bind="text: machineName"></td>
-                            <td data-bind="text: ipAddress"></td>
-                            <td data-bind="text: cpu"></td>
-                            <td data-bind="text: memUsage"></td>
-                            <td data-bind="text: memTotal"></td>
-                            <td data-bind="text: memPercent"></td>
-                            <td data-bind="html: disk"></td>
-                            <td data-bind="text: sysos"></td>
-                            <td data-bind="html: processador"></td>
-                        </tr>
-                        <!-- /ko -->
-                    </tbody>
-                </table>
+<section id="servidores">
+    <div id="computerInfo" class="container-fluid">
+        <div class="container-fluid">
+            <div class="row">
+                <h3 data-bind="visible: connected" style="color:white">Servidores</h3>
+            </div>
+            <button class="btn btn-warning" onclick="exportTableToExcel('tbMachines', 'Servidores')">Exportar a Excel</button>
+            <div class="row">
+                <div class="table-responsive" style="background-color:white">
+                    <table id="tbMachines" border="0" class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>País</th>
+                                <th>Servidor</th>
+                                <th>IP</th>
+                                <th>CPU %</th>
+                                <th>Memoria Utilizada (Mb)</th>
+                                <th>Memoria Total(Mb)</th>
+                                <th>Mem Disp %</th>
+                                <th>Disco Duro</th>
+                                <th>Sistema Operativo</th>
+                                <th>Procesador</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- ko foreach: machines -->
+                            <tr data-bind="css: { highCpu: cpu() > 90 }">
+                                <td data-bind="text: pais"></td>
+                                <td data-bind="text: machineName"></td>
+                                <td data-bind="text: ipAddress"></td>
+                                <td data-bind="text: cpu"></td>
+                                <td data-bind="text: memUsage"></td>
+                                <td data-bind="text: memTotal"></td>
+                                <td data-bind="text: memPercent"></td>
+                                <td data-bind="html: disk"></td>
+                                <td data-bind="text: sysos"></td>
+                                <td data-bind="html: processador"></td>
+                            </tr>
+                            <!-- /ko -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
-
-
-
-
-</div>
-
-<div id="servicesInfo" class="container-fluid">
-    <div class="container-fluid">
-        <div class="row">
-            <h3 style="color:white">Servicios</h3>
-        </div>
-        <button class="btn btn-warning" onclick="tableToExcel('tbServices', 'Servicios')">Exportar a Excel</button>
-        <div class="row">
-            <div class="table-responsive" style="background-color:white">
-                <table id="tbServices" border="0" class="table table-striped table-hover">
-                    <thead>
-                        <tr>
-                            <th scope="col">País</th>
-                            <th scope="col">Servidor</th>
-                            <th scope="col">Nombre</th>
-                            <th scope="col">Versión</th>
-                            <!--<th scope="col">Ruta de Acceso</th>-->
-                            <th scope="col">Archivos</th>
-                            <th scope="col">Estado</th>
-                            <!--<th scope="col">Tipo de Inicio</th>-->
-                            @*<th scope="col">Service name</th>
-                                <th scope="col">IDConnection</th>
-                                <th scope="col">Acciones</th>*@
-                        </tr>
-                    </thead>
-                    <tbody id="sortable">
-                        <!-- ko foreach: services -->
-                        <tr>
-                            <td class="ui-state-default" data-bind="text: pais"></td>
-                            <td class="ui-state-default" data-bind="text: machineName"></td>
-                            <td class="ui-state-default" data-bind="text: serviceDisplayName"></td>
-                            <td class="ui-state-default" data-bind="text: serviceVersion"></td>
-                            <!--<td class="ui-state-default" data-bind="text: path"></td>-->
-                            <td class="ui-state-default" data-bind="html: filesVersion"></td>
-                            <td class="ui-state-default" data-bind="text: status"></td>
-                            <!--<td class="ui-state-default" data-bind="text: startType"></td>-->
-                            <!--
-                            <td class="ui-state-default" data-bind="text: serviceName"></td>
-                            <td class="ui-state-default" data-bind="text: connectionID"></td>
-                            <td class="ui-state-default"><button class="btn btn-danger" onclick="serviceStart()">Iniciar</button></td>
-                                -->
-                        </tr>
-                        <!-- /ko -->
-                    </tbody>
-                </table>
+</section>
+<section id="servicios">
+    <div id="servicesInfo" class="container-fluid">
+        <div class="container-fluid">
+            <div class="row">
+                <h3 style="color:white">Servicios</h3>
+            </div>
+            <button class="btn btn-warning" onclick="exportTableToExcel('tbServices', 'Servicios')">Exportar a Excel</button>
+            <div class="row">
+                <div class="table-responsive" style="background-color:white">
+                    <table id="tbServices" border="0" class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th scope="col">País</th>
+                                <th scope="col">Servidor</th>
+                                <th scope="col">Nombre</th>
+                                <th scope="col">Versión</th>
+                                <th scope="col">Archivos</th>
+                                <th scope="col">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sortable">
+                            <!-- ko foreach: services -->
+                            <tr>
+                                <td class="ui-state-default" data-bind="text: pais"></td>
+                                <td class="ui-state-default" data-bind="text: machineName"></td>
+                                <td class="ui-state-default" data-bind="text: serviceDisplayName"></td>
+                                <td class="ui-state-default" data-bind="text: serviceVersion"></td>
+                                <td class="ui-state-default" data-bind="html: filesVersion"></td>
+                                <td class="ui-state-default" data-bind="text: status"></td>
+                            </tr>
+                            <!-- /ko -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
-</div>
-
-<div id="sitesIIS" class="container-fluid">
-    <div class="container-fluid">
-        <div class="row">
-            <h3 style="color:white">Sitios de IIS</h3>
-        </div>
-        <button class="btn btn-warning" onclick="tableToExcel('tbSitesIIS', 'Sitios de IIS')">Exportar a Excel</button>
-        <div class="row">
-            <div class="table-responsive" style="background-color:white">
-                <table id="tbSitesIIS" border="0" class="table table-striped table-hover">
-                    <thead>
-                        <tr>
-                            <th scope="col">País</th>
-                            <th scope="col">Servidor</th>
-                            <th scope="col">ID</th>
-                            <th scope="col">Nombre</th>
-                            <th scope="col">Enlaces</th>
-                            <th scope="col">Estado</th>
-                            <th scope="col">Ruta</th>
-                        </tr>
-                    </thead>
-                    <tbody id="sortable">
-                        <!-- ko foreach: sites -->
-                        <tr>
-                            <td class="ui-state-default" data-bind="text: pais"></td>
-                            <td class="ui-state-default" data-bind="text: machineName"></td>
-                            <td class="ui-state-default" data-bind="text: siteID"></td>
-                            <td class="ui-state-default" data-bind="text: siteName"></td>
-                            <td class="ui-state-default" data-bind="html: siteBinding"></td>
-                            <td class="ui-state-default" data-bind="text: siteState"></td>
-                            <td class="ui-state-default" data-bind="text: sitePath"></td>
-                        </tr>
-                        <!-- /ko -->
-                    </tbody>
-                </table>
+</section>
+<section id="iisSites">
+    <div id="sitesIIS" class="container-fluid">
+        <div class="container-fluid">
+            <div class="row">
+                <h3 style="color:white">Sitios de IIS</h3>
+            </div>
+            <button class="btn btn-warning" onclick="exportTableToExcel('tbSitesIIS', 'Sitios de IIS')">Exportar a Excel</button>
+            <div class="row">
+                <div class="table-responsive" style="background-color:white">
+                    <table id="tbSitesIIS" border="0" class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th scope="col">País</th>
+                                <th scope="col">Servidor</th>
+                                <th scope="col">ID</th>
+                                <th scope="col">Nombre</th>
+                                <th scope="col">Enlaces</th>
+                                <th scope="col">Estado</th>
+                                <th scope="col">Ruta</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sortable">
+                            <!-- ko foreach: sites -->
+                            <tr>
+                                <td class="ui-state-default" data-bind="text: pais"></td>
+                                <td class="ui-state-default" data-bind="text: machineName"></td>
+                                <td class="ui-state-default" data-bind="text: siteID"></td>
+                                <td class="ui-state-default" data-bind="text: siteName"></td>
+                                <td class="ui-state-default" data-bind="html: siteBinding"></td>
+                                <td class="ui-state-default" data-bind="text: siteState"></td>
+                                <td class="ui-state-default" data-bind="text: sitePath"></td>
+                            </tr>
+                            <!-- /ko -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
-</div>
-
-<div id="sitesNode" class="container-fluid">
-    <div class="container-fluid">
-        <div class="row">
-            <h3 style="color:white">Sitios de Node</h3>
-        </div>
-        <button class="btn btn-warning" onclick="tableToExcel('tbSitesNode', 'Sitios de Node')">Exportar a Excel</button>
-        <div class="row">
-            <div class="table-responsive" style="background-color:white">
-                <table id="tbSitesNode" border="0" class="table table-striped table-hover">
-                    <thead>
-                        <tr>
-                            <th scope="col">País</th>
-                            <th scope="col">Servidor</th>
-                            <th scope="col">ProcessID</th>
-                            <th scope="col">Nombre del Proceso</th>
-                            <th scope="col">Instancia</th>
-                            <th scope="col">Línea de Comando</th>
-                        </tr>
-                    </thead>
-                    <tbody id="sortable">
-                        <!-- ko foreach: sitesNode -->
-                        <tr>
-                            <td class="ui-state-default" data-bind="text: pais"></td>
-                            <td class="ui-state-default" data-bind="text: machineName"></td>
-                            <td class="ui-state-default" data-bind="text: processID"></td>
-                            <td class="ui-state-default" data-bind="text: processName"></td>
-                            <td class="ui-state-default" data-bind="html: instanceName"></td>
-                            <td class="ui-state-default" data-bind="text: commandLine"></td>
-                        </tr>
-                        <!-- /ko -->
-                    </tbody>
-                </table>
+</section>
+<section id="NodeSites">
+    <div id="sitesNode" class="container-fluid">
+        <div class="container-fluid">
+            <div class="row">
+                <h3 style="color:white">Sitios de Node</h3>
+            </div>
+            <button class="btn btn-warning" onclick="exportTableToExcel('tbSitesNode', 'Sitios de Node')">Exportar a Excel</button>
+            <div class="row">
+                <div class="table-responsive" style="background-color:white">
+                    <table id="tbSitesNode" border="0" class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th scope="col">País</th>
+                                <th scope="col">Servidor</th>
+                                <th scope="col">ProcessID</th>
+                                <th scope="col">Nombre del Proceso</th>
+                                <th scope="col">Instancia</th>
+                                <th scope="col">Línea de Comando</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sortable">
+                            <!-- ko foreach: sitesNode -->
+                            <tr>
+                                <td class="ui-state-default" data-bind="text: pais"></td>
+                                <td class="ui-state-default" data-bind="text: machineName"></td>
+                                <td class="ui-state-default" data-bind="text: processID"></td>
+                                <td class="ui-state-default" data-bind="text: processName"></td>
+                                <td class="ui-state-default" data-bind="html: instanceName"></td>
+                                <td class="ui-state-default" data-bind="text: commandLine"></td>
+                            </tr>
+                            <!-- /ko -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
-</div>
-
+</section>
 @section Scripts {
     <script src="~/Scripts/index.js"></script>
     <script src="~/Scripts/common.js"></script>
-    <script type="text/javascript">
-        var tableToExcel = (function () {
-            var uri = 'data:application/vnd.ms-excel;base64,'
-                , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--><meta http-equiv="content-type" content="text/plain; charset=UTF-8"/></head><body><table>{table}</table></body></html>'
-                , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
-                , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
-            return function (table, name) {
-                if (!table.nodeType) table = document.getElementById(table)
-                var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML }
-                window.location.href = uri + +"test" + base64(format(template, ctx))
-            }
-        })()
-    </script>
 
 }
