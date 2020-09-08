@@ -49,7 +49,8 @@ $(function () {
             filesVersion: filesVersion,
             pais: pais,
             iisSites: iisSites,
-            processNode: processNode
+            processNode: processNode,
+            status: "ACTIVO"
         };
 
 
@@ -109,30 +110,30 @@ $(function () {
 
             }
             */
-                const datos = vm.services();
-                //Filtro para ver si existe el servicio
-                const searchService = datos.find(serv => serv.machineName() === machineName && serv.serviceName() === serviceName && serv.status() === status);
-                //Filtro por Estado
-                const searchStatus = datos.find(serv => serv.machineName() === machineName && serv.serviceName() === serviceName && serv.status() !== status);
-                //Filtro por Version
-                const searchVersion = datos.find(serv => serv.machineName() === machineName && serv.serviceName() === serviceName && serv.serviceVersion() !== serviceVersion);
+            const datos = vm.services();
+            //Filtro para ver si existe el servicio
+            const searchService = datos.find(serv => serv.machineName() === machineName && serv.serviceName() === serviceName && serv.status() === status);
+            //Filtro por Estado
+            const searchStatus = datos.find(serv => serv.machineName() === machineName && serv.serviceName() === serviceName && serv.status() !== status);
+            //Filtro por Version
+            const searchVersion = datos.find(serv => serv.machineName() === machineName && serv.serviceName() === serviceName && serv.serviceVersion() !== serviceVersion);
 
-                if (typeof searchStatus !== 'undefined') {
-                    var index = vm.services.indexOf(searchStatus);
-                    vm.services.replace(vm.services()[index], serviceModel);
-                }
-                else {
-                    if (typeof searchService === 'undefined')
-                        vm.services.push(serviceModel);
-                }
+            if (typeof searchStatus !== 'undefined') {
+                var index = vm.services.indexOf(searchStatus);
+                vm.services.replace(vm.services()[index], serviceModel);
+            }
+            else {
+                if (typeof searchService === 'undefined')
+                    vm.services.push(serviceModel);
+            }
 
-                if (typeof searchVersion !== 'undefined') {
-                    var index2 = vm.services.indexOf(searchVersion);
-                    vm.services.replace(vm.services()[index2], serviceModel);
-                }
-            
+            if (typeof searchVersion !== 'undefined') {
+                var index2 = vm.services.indexOf(searchVersion);
+                vm.services.replace(vm.services()[index2], serviceModel);
+            }
 
-            
+
+
         });
 
         //Procesamos los IIS Sites
@@ -228,6 +229,39 @@ $(function () {
         });
     };
 
+    //Add a handler to receive disconnect
+    hub.client.onUserDisconnected = function (connectionID, machineName) {
+        console.log(machineName + " se ha desconectado");
+        var today = new Date();
+
+        var input, filter, table, tr, tdName, tdStatus, i, txtValue;
+        input = machineName;
+        filter = input.toUpperCase();
+        table = document.getElementById('tbMachines');
+        tr = table.getElementsByTagName("tr");
+        // Loop through all table rows, and hide those who don't match the search query
+        for (i = 1; i <= tr.length - 1; i++) {
+            //Recorro fila por fila.. obtengo la columna 1
+            tdName = tr[i].getElementsByTagName("td")[1];
+            if (tdName) {
+                txtValue = tdName.textContent || tdName.innerText;
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    tdStatus = tr[i].getElementsByTagName("td")[10]
+                    txtValue = tdStatus.textContent || tdStatus.innerText;
+                    if (txtValue.toUpperCase().indexOf("ACTIVO") > -1) {
+                        tr[i].style.backgroundColor = "red";
+                        tr[i].style.color = "white";
+                        tdStatus.innerHTML = "DESCONECTADO - " + today.toLocaleString("es-AR");
+                    }
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+
+
+    };
+
     // Start the connection
     $.connection.hub.start().catch(err => console.error(err.toString())).then(function () {
         //Send the connectionId to controller
@@ -237,6 +271,7 @@ $(function () {
         hub.server.connect();
     });
 });
+
 
 //function serviceStart() {
 //    var txt = $(this).text();

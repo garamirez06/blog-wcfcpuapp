@@ -171,6 +171,8 @@
     <Content Include="Images\falconYellowWhite2.png" />
     <Content Include="Images\falconIco2.png" />
     <Content Include="Images\falconIco3.png" />
+    <Content Include="Images\falconIco4.png" />
+    <Content Include="Images\falconYellowWhite4.png" />
     <Content Include="Images\monitor.png" />
     <Content Include="Scripts\bootstrap.bundle.js" />
     <Content Include="Scripts\bootstrap.bundle.min.js" />

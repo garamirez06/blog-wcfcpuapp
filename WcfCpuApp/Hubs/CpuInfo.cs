@@ -53,7 +53,7 @@ namespace WcfCpuApp.Hubs
                 ConnectedUsers.Remove(item);
 
                 var id = Context.ConnectionId;
-                Clients.All.onUserDisconnected(id, item.MachineName);
+                this.Clients.All.onUserDisconnected(id, item.MachineName);
 
             }
             return base.OnDisconnected(stopCalled);

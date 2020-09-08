@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNet.SignalR;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -14,6 +15,9 @@ namespace WcfCpuApp
     {
         protected void Application_Start()
         {
+            // Wait a maximum of 30 seconds after a transport connection is lost
+            // before raising the Disconnected event to terminate the SignalR connection.
+            GlobalHost.Configuration.DisconnectTimeout = TimeSpan.FromSeconds(6);
             AreaRegistration.RegisterAllAreas();
 
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
