@@ -32,7 +32,7 @@ $(function () {
     */
 
     // Add a handler to receive updates from the server
-    hub.client.cpuInfoMessage = function (machineName, cpu, memUsage, memTotal, services, ips, disk, sysos, procesador, filesVersion, pais, iisSites, processNode) {
+    hub.client.cpuInfoMessage = function (machineName, cpu, memUsage, memTotal, services, ips, disk, sysos, procesador, filesVersion, pais, iisSites, processNode, descriptionServer) {
         var country = pais;
         disk = disk.replace("\r\n", "<br>", "g");
         var machine = {
@@ -50,7 +50,8 @@ $(function () {
             pais: pais,
             iisSites: iisSites,
             processNode: processNode,
-            status: "ACTIVO"
+            status: "ACTIVO",
+            descriptionServer: descriptionServer
         };
 
 
@@ -232,6 +233,7 @@ $(function () {
     //Add a handler to receive disconnect
     hub.client.onUserDisconnected = function (connectionID, machineName) {
         console.log(machineName + " se ha desconectado");
+        notificar(machineName);
         var today = new Date();
 
         var input, filter, table, tr, tdName, tdStatus, i, txtValue;
@@ -246,7 +248,7 @@ $(function () {
             if (tdName) {
                 txtValue = tdName.textContent || tdName.innerText;
                 if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                    tdStatus = tr[i].getElementsByTagName("td")[10]
+                    tdStatus = tr[i].getElementsByTagName("td")[11]
                     txtValue = tdStatus.textContent || tdStatus.innerText;
                     if (txtValue.toUpperCase().indexOf("ACTIVO") > -1) {
                         tr[i].style.backgroundColor = "red";
@@ -272,8 +274,21 @@ $(function () {
     });
 });
 
+function notificar(serverName) {
+    var dts = Math.floor(Date.now());
+    if (Notification.permission === "granted") {
+        var wNotify = new Notification("Alerta - Falcon", {
+            body: "Problemas con el servidor " + serverName,
+            icon: "/Images/falconIco4.png",
+            badge: "/Images/falconIco4.png",
+            requireInteraction: true,
+            timestamp: dts
+        });
+        wNotify.onclick = (e) => {
+            window.open("https://google.com", "_blank");
+            wNotify.close();
+        };
 
-//function serviceStart() {
-//    var txt = $(this).text();
-//    console.log(txt);
-//}
+        setTimeout(function () { wNotify.close() }, 10000)
+    }
+}

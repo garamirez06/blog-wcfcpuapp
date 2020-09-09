@@ -275,6 +275,8 @@ namespace CpuInfoClient
                     #region Enviar Metricas PC
                     //Obtenemos Pais
                     var pais = (ConfigurationManager.AppSettings["pais"]).ToString();
+                    //Obtenemos descripcion
+                    var description = (ConfigurationManager.AppSettings["descriptionServer"]).ToString();
                     // Send the data
                     var postData = new
                     {
@@ -289,7 +291,8 @@ namespace CpuInfoClient
                         sysos = wSO,
                         processador = wProcesador,
                         iisSites = iisSites,
-                        processNode = node
+                        processNode = node,
+                        descriptionServer= description
                     };
                     try
                     {

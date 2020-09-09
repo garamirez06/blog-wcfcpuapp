@@ -73,6 +73,7 @@
                             <tr>
                                 <th>País</th>
                                 <th>Servidor</th>
+                                <th>Descripción</th>
                                 <th>IP</th>
                                 <th>CPU %</th>
                                 <th>Memoria Utilizada (Mb)</th>
@@ -89,6 +90,7 @@
                             <tr data-bind="css: { highCpu: cpu() > 90 }">
                                 <td data-bind="text: pais"></td>
                                 <td data-bind="text: machineName"></td>
+                                <td data-bind="text: descriptionServer"></td>
                                 <td data-bind="text: ipAddress"></td>
                                 <td data-bind="text: cpu"></td>
                                 <td data-bind="text: memUsage"></td>

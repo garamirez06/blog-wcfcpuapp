@@ -48,6 +48,16 @@
         @RenderBody()
     </div>
     <script type="text/javascript" src="~/Scripts/ScriptCollapsing.js"></script>
+    <script>
+        console.log(Notification.permission);
+        if (Notification.permission === "granted") {
+            console.log("we have permission");
+        } else if (Notification.permission !== "denied") {
+            Notification.requestPermission().then(permission => {
+                console.log(permission);
+            });
+        }
+    </script>
     <footer>
         <div class="container-fluid">
             <hr />
