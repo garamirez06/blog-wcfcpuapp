@@ -31,3 +31,72 @@
     }
     
 }
+
+
+
+
+var selectedCountry = "Todos";
+var selectedServer = "Todos";
+var selectedService = "Todos";
+
+function searchObject(textSearch, tableID, columnID, exact,columnAnt) {
+    // Declare variables
+    var input, filter, table, tr, td, i, txtValue;
+    input = textSearch;
+    filter = input.toUpperCase();
+    table = document.getElementById(tableID);
+    tr = table.getElementsByTagName("tr");
+
+    var colSer = 2;
+    var colPC = 1;
+    var colPais = 0;
+
+    // Loop through all table rows, and hide those who don't match the search query
+    for (i = 0; i < tr.length; i++) {
+        //Recorro fila por fila.. obtengo la columna 1
+        td = tr[i].getElementsByTagName("td")[columnID];
+        if (td) {
+            txtValue = td.textContent || td.innerText;
+            if (exact) {
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                    //Aplica solo a servicios
+                    if (colSer != columnID && selectedService !== "Todos" && colSer!==columnAnt && tableID == 'tbServices') {
+                        searchObject(selectedService, tableID, 2, 1,columnID);
+                    }
+                    //Busco Servidor
+                    if (colPC != columnID && selectedServer !== "Todos" && colPC !== columnAnt) {
+                        searchObject(selectedServer, tableID, 1, 1, columnID);
+                    }
+                    //Busco Pais
+                    if (colPais != columnID && selectedCountry !== "Todos" && colPC !== columnAnt) {
+                        searchObject(selectedCountry, tableID, 0, 1, columnID);
+                    }
+                }
+                else {
+                    if (textSearch == "Todos") {
+                        tr[i].style.display = "";
+                    }
+                    else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+            else {
+                if (txtValue.toUpperCase().includes(filter.toUpperCase())) {
+                    tr[i].style.display = "";
+                }
+                else {
+                    if (textSearch == "Todos") {
+                        tr[i].style.display = "";
+                    }
+                    else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+
+        }
+
+    }
+}
