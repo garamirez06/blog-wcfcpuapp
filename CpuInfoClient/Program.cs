@@ -51,6 +51,7 @@ namespace CpuInfoClient
         {
 
             // Hello!
+            Console.WriteLine("----------------------------------------------------");
             Console.WriteLine("Falcon Agent - Captura de Información en Tiempo Real");
             Console.WriteLine("----------------------------------------------------");
             Thread pollingThread = null;
@@ -67,7 +68,8 @@ namespace CpuInfoClient
                 string wHost = ConfigurationManager.AppSettings["ProxyHost"].ToString();
 
                 _wProxy = new WebProxy(wHost, wPort);
-                _wProxy.Credentials = new System.Net.NetworkCredential(wUser, wPass, wDomain);
+                if (!string.IsNullOrEmpty(wUser))
+                    _wProxy.Credentials = new System.Net.NetworkCredential(wUser, wPass, wDomain);
             }
 
 
@@ -95,7 +97,7 @@ namespace CpuInfoClient
             }
             catch (Exception ex)
             {
-                Console.WriteLine(DateTime.Now.ToString() + " No se pudo conectar al Hub. Mas Info: " + ex.Message);
+                Console.WriteLine(DateTime.Now.ToString() + " No se pudo conectar al Hub. Mas Info: " + ex.Message + " - Detalle: " + ex.InnerException.InnerException.Message);
             }
 
 
@@ -214,14 +216,6 @@ namespace CpuInfoClient
 
                     DriveInfo[] allDrives = DriveInfo.GetDrives();
                     StringBuilder wListDisk = new StringBuilder();
-                    if (DriveInfo.GetDrives().Length > 0)
-                    {
-
-                        wListDisk.Append("<button type=\"button\" class=\"btn btn-info collapsible\"  onclick=\"collapse()\">+</button>");
-                        wListDisk.Append("<div id=\"collapseDisk\" class=\"content\">");
-                        wListDisk.Append("<ul class=\"list-group\">");
-                    }
-
                     foreach (DriveInfo d in allDrives)
                     {
                         //Excluimos los discos
@@ -229,23 +223,16 @@ namespace CpuInfoClient
                             continue;
                         if (d.IsReady == true)
                         {
-                            wListDisk.Append("<li class=\"list-group-item\">");
+                            wListDisk.Append("<p class=\"info-disco\">");
                             wListDisk.Append(string.Format("{0}", d.Name));
                             wListDisk.Append(" - ");
-                            wListDisk.Append(string.Format("Etiqueta de Volumen: {0}", d.VolumeLabel));
+                            wListDisk.Append(string.Format("{0}", d.DriveFormat));
                             wListDisk.Append(" - ");
-                            wListDisk.Append(string.Format("Sistema de Archivos: {0}", d.DriveFormat));
-                            wListDisk.Append(" - ");
-                            wListDisk.Append(string.Format("Espacio Disponible: {0} GB", (((d.TotalFreeSpace / 1024) / 1024) / 1024)));
-                            wListDisk.Append(" - ");
-                            wListDisk.Append(string.Format("Espacio Total en Disco: {0} GB ", (((d.TotalSize / 1024) / 1024) / 1024)));
-                            wListDisk.Append("</li>");
+                            wListDisk.Append(string.Format("{0} GB", (((d.TotalFreeSpace / 1024) / 1024) / 1024)));
+                            wListDisk.Append(" / ");
+                            wListDisk.Append(string.Format("{0} GB ", (((d.TotalSize / 1024) / 1024) / 1024)));
+                            wListDisk.Append("</p>");
                         }
-                    }
-                    if (DriveInfo.GetDrives().Length > 0)
-                    {
-                        wListDisk.Append("</ul>");
-                        wListDisk.Append("</div>");
                     }
 
                     #endregion
@@ -292,7 +279,7 @@ namespace CpuInfoClient
                         processador = wProcesador,
                         iisSites = iisSites,
                         processNode = node,
-                        descriptionServer= description
+                        descriptionServer = description
                     };
                     try
                     {
@@ -352,8 +339,8 @@ namespace CpuInfoClient
             foreach (ManagementObject MO in MOS.Get())
             {
                 wText.Append(string.Format("Nombre: {0}<br>", MO["Name"]));
-                wText.Append(string.Format("Número de Cores: {0}<br>", MO["NumberOfCores"]));
-                wText.Append(string.Format("Número de Procesadores Lógicos: {0}<br>", MO["NumberOfLogicalProcessors"]));
+                //wText.Append(string.Format("Número de Cores: {0}<br>", MO["NumberOfCores"]));
+                //wText.Append(string.Format("Número de Procesadores Lógicos: {0}<br>", MO["NumberOfLogicalProcessors"]));
                 break;
             }
             return wText.ToString();
@@ -370,16 +357,16 @@ namespace CpuInfoClient
                 Console.WriteLine(DateTime.Now.ToString() + " - Inicio de la búsqueda de servicios");
                 foreach (var itService in ServiceController.GetServices().OrderBy(p => p.DisplayName))
                 {
-
                     if (itService.ServiceType.ToString().Equals("Win32ShareProcess"))
                         continue;
 
-
-                    if (!itService.ServiceName.ToLower().Contains("epiron"))
-                        if (!itService.ServiceName.ToLower().Contains("nginx"))
-                            continue;
-                    if (itService.ServiceName.ToLower().Contains("sql"))
-                        continue;
+                    if (!itService.ServiceName.ToLower().Contains("sql"))
+                        if (!itService.ServiceName.ToLower().Contains("epiron"))
+                            if (!itService.ServiceName.ToLower().Contains("nginx"))
+                                if (!itService.ServiceName.ToUpper().Contains("MSDTC"))
+                                    continue;
+                    //if (itService.ServiceName.ToLower().Contains("sql"))
+                    //    continue;
 
                     wService = new ServiceBE();
                     wService.pais = pais.ToUpper();
@@ -462,72 +449,86 @@ namespace CpuInfoClient
                     //Buscamos todos los archivos dlls y exe en el folder path
                     if (wService.serviceVersion != "N/A")
                     {
-                        if (wService.serviceName.ToLower().Contains("chat"))
+                        if (wService.serviceName.ToLower().Contains("sql") || wService.serviceName.ToUpper().Contains("MSDTC"))
                         {
-                            wService.filesVersion = "NO Aplica para CHAT";
+                            // Query WMI for additional information about this service.
+                            // Display the start name (LocalSystem, etc) and the service
+                            // description.
+                            ManagementObject wmiService;
+                            wmiService = new ManagementObject("Win32_Service.Name='" + wService.serviceName + "'");
+                            wmiService.Get();
+                            wService.filesVersion = wmiService["StartName"].ToString();
                         }
                         else
                         {
-                            string wDirectory = Path.GetDirectoryName(wService.Path);
-                            if (!Directory.Exists(wDirectory))
+                            if (wService.serviceName.ToLower().Contains("chat"))
                             {
-                                wService.filesVersion = "N/A";
+                                wService.filesVersion = "NO Aplica para CHAT";
                             }
                             else
                             {
-                                StringBuilder sb = new StringBuilder();
-                                try
+                                string wDirectory = Path.GetDirectoryName(wService.Path);
+                                if (!Directory.Exists(wDirectory))
                                 {
-                                    if (!string.IsNullOrEmpty(wDirectory))
+                                    wService.filesVersion = "N/A";
+                                }
+                                else
+                                {
+                                    StringBuilder sb = new StringBuilder();
+                                    try
                                     {
-                                        //Buscamos todos los archivos del directorio
-                                        DirectoryInfo di = new DirectoryInfo(wDirectory);
-                                        if (di.GetFiles() != null && di.GetFiles().Length > 0)
+                                        if (!string.IsNullOrEmpty(wDirectory))
                                         {
-                                            sb.Append("<button type=\"button\" class=\"btn btn-info collapsible\"  onclick=\"collapse()\">+</button>");
-                                            sb.Append("<div id=\"collapseServices\" class=\"content\">");
-                                            sb.Append("<table class=\"table table-striped table-hover\" style='font-size: 11px;'>");
-                                            sb.Append("<thead><tr><th scope=\"col\"> Archivo </th><th scope=\"col\"> Versión</th></tr></thead>");
-                                            sb.Append("<tbody>");
-                                        }
-                                        foreach (var file in di.GetFiles())
-                                        {
-                                            if (!((file.Extension == ".dll") || (file.Extension == ".exe")))
-                                                continue;
-                                            if (file.Name.ToLower() == (ConfigurationManager.AppSettings["DllDefault"].ToString().ToLower()) || file.Name.ToLower() == (ConfigurationManager.AppSettings["DllAQDefault"].ToString().ToLower()))
+                                            //Buscamos todos los archivos del directorio
+                                            DirectoryInfo di = new DirectoryInfo(wDirectory);
+                                            if (di.GetFiles() != null && di.GetFiles().Length > 0)
                                             {
-                                                wService.serviceVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(file.FullName).FileVersion;
-                                                wService.Path = file.FullName;
+                                                sb.Append("<button type=\"button\" class=\"btn btn-info collapsible\"  onclick=\"collapse()\">Ver " + di.GetFiles().Length + " Archivos </button>");
+                                                sb.Append("<div id=\"collapseServices\" class=\"content\">");
+                                                sb.Append("<table class=\"table table-striped table-hover\" style='font-size: 11px;'>");
+                                                sb.Append("<thead><tr><th scope=\"col\"> Archivo </th><th scope=\"col\"> Versión</th></tr></thead>");
+                                                sb.Append("<tbody>");
+                                            }
+                                            foreach (var file in di.GetFiles())
+                                            {
+                                                if (!((file.Extension == ".dll") || (file.Extension == ".exe")))
+                                                    continue;
+                                                if (file.Name.ToLower() == (ConfigurationManager.AppSettings["DllDefault"].ToString().ToLower()) || file.Name.ToLower() == (ConfigurationManager.AppSettings["DllAQDefault"].ToString().ToLower()))
+                                                {
+                                                    wService.serviceVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(file.FullName).FileVersion;
+                                                    wService.Path = file.FullName;
+                                                }
+
+                                                sb.Append("<tr>");
+                                                sb.AppendLine("<td>" + file.FullName + "</td><td>" + System.Diagnostics.FileVersionInfo.GetVersionInfo(file.FullName).FileVersion + "</td>");
+                                                sb.Append("</tr>");
+                                            }
+                                            if (di.GetFiles() != null && di.GetFiles().Length > 0)
+                                            {
+                                                sb.Append("</tbody>");
+                                                sb.Append("</table>");
+                                                sb.Append("</div>");
+
                                             }
 
-                                            sb.Append("<tr>");
-                                            sb.AppendLine("<td>" + file.FullName + "</td><td>" + System.Diagnostics.FileVersionInfo.GetVersionInfo(file.FullName).FileVersion + "</td>");
-                                            sb.Append("</tr>");
+                                            wService.filesVersion = sb.ToString();
+                                            if (string.IsNullOrEmpty(wService.filesVersion))
+                                                wService.filesVersion = "N/A";
                                         }
-                                        if (di.GetFiles() != null && di.GetFiles().Length > 0)
+                                        else
                                         {
-                                            sb.Append("</tbody>");
-                                            sb.Append("</table>");
-                                            sb.Append("</div>");
-
+                                            wService.filesVersion = "N/A";
                                         }
 
-                                        wService.filesVersion = sb.ToString();
-                                        if (string.IsNullOrEmpty(wService.filesVersion))
-                                            wService.filesVersion = "N/A";
                                     }
-                                    else
+                                    catch (Exception ex)
                                     {
-                                        wService.filesVersion = "N/A";
+                                        Console.WriteLine(wDirectory + " - " + ex.Message);
                                     }
-
-                                }
-                                catch (Exception ex)
-                                {
-                                    Console.WriteLine(wDirectory + " - " + ex.Message);
                                 }
                             }
                         }
+                        
                     }
                     else
                     {
@@ -545,7 +546,7 @@ namespace CpuInfoClient
                 return null;
             }
 
-
+            Console.WriteLine("Final de Busqueda de Servicios: " + cont);
             return wServiceList;
         }
 
@@ -560,7 +561,7 @@ namespace CpuInfoClient
             if (sites.Count > 0)
             {
                 wList = new List<SitesIISBE>();
-                foreach (var site in sites)
+                foreach (var site in sites.OrderBy(s => s.Id))
                 {
                     var applicationRoot = site.Applications.Where(a => a.Path == "/").Single();
                     var virtualRoot = applicationRoot.VirtualDirectories.Where(v => v.Path == "/").Single();
@@ -582,8 +583,23 @@ namespace CpuInfoClient
                     wSite.siteID = site.Id;
                     wSite.siteName = site.Name;
                     wSite.siteBinding = binding;
-                    wSite.siteState = site.State.ToString();
-                    wSite.sitePath = virtualRoot.PhysicalPath;
+                    try
+                    {
+                        wSite.siteState = site.State.ToString();
+                    }
+                    catch (Exception ex)
+                    {
+                        wSite.siteState = "Error en la obtencion del Estado";
+                    }
+                    try
+                    {
+                        wSite.sitePath = virtualRoot.PhysicalPath;
+                    }
+                    catch (Exception ex)
+                    {
+                        wSite.sitePath = "Error en la obtención del Path";
+                    }
+
                     wList.Add(wSite);
                     //Console.WriteLine(string.Format("Id Sitio: {0} - Nombre del Sitio: {1} \n Enlaces:  {2} - Estado: {3} - Ruta: {4}", site.Id, site.Name, binding, site.State, virtualRoot.PhysicalPath));
                 }

@@ -100,3 +100,33 @@ function searchObject(textSearch, tableID, columnID, exact,columnAnt) {
 
     }
 }
+
+
+function searchStatus(tableID, columnID) {
+    // Declare variables
+    var input, filter, table, tr, td, i, txtValue;
+    var textSearch = "";
+    input = textSearch;
+    filter = input.toUpperCase();
+    table = document.getElementById(tableID);
+    tr = table.getElementsByTagName("tr");
+    // Loop through all table rows, and hide those who don't match the search query
+    for (i = 1; i <= tr.length-1; i++) {
+        //Recorro fila por fila.. obtengo la columna 1
+        var td2 = tr[i].getElementsByTagName("td")[columnID];
+        td = tr[i].getElementsByClassName("ui-state-default")[columnID];
+        if (td) {
+            txtValue = td.textContent || td.innerText;
+            if (txtValue.toUpperCase().indexOf("ACTIVO") > -1 || txtValue.toUpperCase().indexOf("RUNNING") > -1 || txtValue.toUpperCase().indexOf("STARTED") > -1) {
+                tr[i].cells[columnID].style.backgroundColor = "green";
+                tr[i].cells[columnID].style.color = "white";
+                tr[i].cells[columnID].style.fontWeight = "bold";
+
+            } else {
+                tr[i].cells[columnID].style.backgroundColor = "red";
+                tr[i].cells[columnID].style.color = "white";
+                tr[i].cells[columnID].style.fontWeight = "bold";
+            }
+        }
+    }
+}

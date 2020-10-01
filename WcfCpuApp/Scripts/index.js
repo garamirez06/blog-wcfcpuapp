@@ -228,6 +228,10 @@ $(function () {
             }
 
         });
+        //Ejecutamos el Status
+        searchStatus('tbMachines', 9);
+        searchStatus('tbServices', 4);
+        searchStatus('tbSitesIIS', 5);
     };
 
     //Add a handler to receive disconnect
@@ -248,7 +252,7 @@ $(function () {
             if (tdName) {
                 txtValue = tdName.textContent || tdName.innerText;
                 if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                    tdStatus = tr[i].getElementsByTagName("td")[11]
+                    tdStatus = tr[i].getElementsByTagName("td")[9]
                     txtValue = tdStatus.textContent || tdStatus.innerText;
                     if (txtValue.toUpperCase().indexOf("ACTIVO") > -1) {
                         tr[i].style.backgroundColor = "red";
@@ -261,6 +265,10 @@ $(function () {
             }
         }
 
+        //Ejecutamos el Status
+        searchStatus('tbMachines', 9);
+        searchStatus('tbServices', 4);
+        searchStatus('tbSitesIIS', 5);
 
     };
 
@@ -272,6 +280,8 @@ $(function () {
         vm.connected(true);
         hub.server.connect();
     });
+
+    
 });
 
 function notificar(serverName) {

@@ -20,6 +20,7 @@
         line-height: 1.1;
         background-color: #FFCC00;
         border-color: #FFCC00;
+        font-weight:bold;
     }
 
         .active, .collapsible:hover {
@@ -76,30 +77,31 @@
                                 <th>Descripción</th>
                                 <th>IP</th>
                                 <th>CPU %</th>
-                                <th>Memoria Utilizada (Mb)</th>
+                                <th>Memoria Disponible (Mb)</th>
                                 <th>Memoria Total(Mb)</th>
                                 <th>Mem Disp %</th>
                                 <th>Disco Duro</th>
+                                <th>Estado</th>
                                 <th>Sistema Operativo</th>
                                 <th>Procesador</th>
-                                <th>Estado</th>
                             </tr>
                         </thead>
                         <tbody>
                             <!-- ko foreach: machines -->
                             <tr data-bind="css: { highCpu: cpu() > 90 }">
-                                <td data-bind="text: pais"></td>
-                                <td data-bind="text: machineName"></td>
-                                <td data-bind="text: descriptionServer"></td>
-                                <td data-bind="text: ipAddress"></td>
-                                <td data-bind="text: cpu"></td>
-                                <td data-bind="text: memUsage"></td>
-                                <td data-bind="text: memTotal"></td>
-                                <td data-bind="text: memPercent"></td>
-                                <td data-bind="html: disk"></td>
-                                <td data-bind="text: sysos"></td>
-                                <td data-bind="html: processador"></td>
-                                <td data-bind="text: status"></td>
+                                <td class="ui-state-default" data-bind="text: pais"></td>
+                                <td class="ui-state-default" data-bind="text: machineName"></td>
+                                <td class="ui-state-default" data-bind="text: descriptionServer"></td>
+                                <td class="ui-state-default" data-bind="text: ipAddress"></td>
+                                <td class="ui-state-default" data-bind="text: cpu"></td>
+                                <td class="ui-state-default" data-bind="text: memUsage"></td>
+                                <td class="ui-state-default" data-bind="text: memTotal"></td>
+                                <td class="ui-state-default" data-bind="text: memPercent"></td>
+                                <td class="ui-state-default" data-bind="html: disk"></td>
+                                <td class="ui-state-default" data-bind="text: status"></td>
+                                <td class="ui-state-default" data-bind="text: sysos"></td>
+                                <td class="ui-state-default" data-bind="html: processador"></td>
+
                             </tr>
                             <!-- /ko -->
                         </tbody>
@@ -125,8 +127,9 @@
                                 <th scope="col">Servidor</th>
                                 <th scope="col">Nombre</th>
                                 <th scope="col">Versión</th>
-                                <th scope="col">Archivos</th>
                                 <th scope="col">Estado</th>
+                                <th scope="col">Detalles</th>
+
                             </tr>
                         </thead>
                         <tbody id="sortable">
@@ -136,8 +139,9 @@
                                 <td class="ui-state-default" data-bind="text: machineName"></td>
                                 <td class="ui-state-default" data-bind="text: serviceDisplayName"></td>
                                 <td class="ui-state-default" data-bind="text: serviceVersion"></td>
-                                <td class="ui-state-default" data-bind="html: filesVersion"></td>
                                 <td class="ui-state-default" data-bind="text: status"></td>
+                                <td class="ui-state-default" data-bind="html: filesVersion"></td>
+
                             </tr>
                             <!-- /ko -->
                         </tbody>
