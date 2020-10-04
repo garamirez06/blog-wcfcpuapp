@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 16.0.30413.136
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WcfCpuApp", "WcfCpuApp\WcfCpuApp.csproj", "{E543D182-08F3-4242-B4DF-3663B492487F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{FF5DFADD-0BAE-4470-863F-C0590E37D8F0} = {FF5DFADD-0BAE-4470-863F-C0590E37D8F0}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CpuInfoClient", "CpuInfoClient\CpuInfoClient.csproj", "{4736277F-04B0-4482-B636-38052329E1D8}"
 EndProject
