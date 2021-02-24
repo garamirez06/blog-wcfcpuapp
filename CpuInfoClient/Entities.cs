@@ -20,7 +20,7 @@ namespace CpuInfoClient
         public string serviceVersion { get; set; }
         public string filesVersion { get; set; }
         //Campos a Revisar
-        public string connectionID { get; set; }
+        //public string connectionID { get; set; }
         public string pais { get; set; }
     }
 

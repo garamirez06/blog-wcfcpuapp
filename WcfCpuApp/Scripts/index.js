@@ -33,6 +33,9 @@ $(function () {
 
     // Add a handler to receive updates from the server
     hub.client.cpuInfoMessage = function (machineName, cpu, memUsage, memTotal, services, ips, disk, sysos, procesador, filesVersion, pais, iisSites, processNode, descriptionServer) {
+        //La enviamos a estatizar en caliente
+        hub.server.getDataStatic(machineName, cpu, memUsage, memTotal, services, ips, disk, sysos, procesador, filesVersion, pais, iisSites, processNode, descriptionServer);
+
         var country = pais;
         disk = disk.replace("\r\n", "<br>", "g");
         var machine = {
@@ -276,12 +279,18 @@ $(function () {
     $.connection.hub.start().catch(err => console.error(err.toString())).then(function () {
         //Send the connectionId to controller
         var connectionID = $.connection.hub.id;
-        console.log("Connection ID: " + connectionID);
+        //console.log("Connection ID: " + connectionID);
         vm.connected(true);
         hub.server.connect();
+
+        var checkMachines = $('#tbMachines tr:not(:first)').length;
+        if (checkMachines == 0) {
+            console.log("Proceso");
+            hub.server.retrieveDataStatic();
+        }
     });
 
-    
+
 });
 
 function notificar(serverName) {

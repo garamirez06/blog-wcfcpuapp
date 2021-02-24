@@ -125,6 +125,7 @@
   <ItemGroup>
     <Compile Include="Api\ServiceInfoController.cs" />
     <Compile Include="Api\CpuInfoController.cs" />
+    <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Common.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Global.asax.cs">

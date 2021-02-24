@@ -1,10 +1,27 @@
-﻿function exportTableToExcel(tableID, filename = '') {    
+﻿function exportTableToExcel(tableID, filename = '') {
+    var table = document.getElementById(tableID);
+    var cloneTable = table.cloneNode(true);
+    jQuery(cloneTable).find('.remove-this').remove();
+
     var downloadLink;
-    var dataType = 'application/vnd.ms-excel';
-    var tableSelect = document.getElementById(tableID);
+    var dataType = 'application/vnd.ms-excel;charset=UTF-8';
+    var tableSelect = cloneTable;
+
     var tableHTML = tableSelect.outerHTML.replace(/ /g, '%20');
     tableHTML = tableHTML.replace("País", "Pais");
     tableHTML = tableHTML.replace("Versión", "Version");
+    tableHTML = tableHTML.replace("Número", "Numero");
+    tableHTML = tableHTML.replace("Á", "A");
+    tableHTML = tableHTML.replace("á", "a");
+    tableHTML = tableHTML.replace("É", "E");
+    tableHTML = tableHTML.replace("é", "e");
+    tableHTML = tableHTML.replace("Í", "I");
+    tableHTML = tableHTML.replace("í", "i");
+    tableHTML = tableHTML.replace("Ó", "O");
+    tableHTML = tableHTML.replace("ó", "o");
+    tableHTML = tableHTML.replace("Ú", "U");
+    tableHTML = tableHTML.replace("ú", "u");
+
 
     // Specify file name
     filename = filename ? filename + '.xls' : 'excel_data.xls';
@@ -29,7 +46,7 @@
         //triggering the function
         downloadLink.click();
     }
-    
+
 }
 
 
@@ -129,4 +146,8 @@ function searchStatus(tableID, columnID) {
             }
         }
     }
+}
+
+function sendStartService(machineName, serviceName) {
+    hub.server.sendMessageStart(machineName, serviceName);
 }
