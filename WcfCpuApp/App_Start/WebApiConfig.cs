@@ -5,6 +5,8 @@ using System.Linq;
 using System.Net.Http.Formatting;
 using System.Web;
 using System.Web.Http;
+using System.Web.Cors;
+using System.Web.Http.Cors;
 
 namespace WcfCpuApp.App_Start
 {
@@ -17,7 +19,8 @@ namespace WcfCpuApp.App_Start
             //config.MessageHandlers.Add(new JwtAuthHandler());
 
             //config.SetCorsPolicyProviderFactory(new CorsPolicyFactory());
-            //config.EnableCors();
+            var cors = new EnableCorsAttribute("http://localhost:8080", "*", "*");
+            config.EnableCors();
             //Attribute routing
             config.MapHttpAttributeRoutes();
 

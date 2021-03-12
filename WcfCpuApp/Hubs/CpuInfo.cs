@@ -173,6 +173,31 @@ namespace WcfCpuApp.Hubs
 
         }
 
+        public void SendMessageStop(string pMachineName, String pServiceName)
+        {
+            String idConnection;
+            var item = ConnectedUsers.FirstOrDefault(x => x.MachineName == pMachineName);
+            if (item != null)
+            {
+                idConnection = item.ConnectionId;
+                Clients.Client(idConnection).SendMessageStop(pServiceName);
+            }
+
+        }
+
+        public void SendMessageRestart(string pMachineName, String pServiceName)
+        {
+            String idConnection;
+            var item = ConnectedUsers.FirstOrDefault(x => x.MachineName == pMachineName);
+            if (item != null)
+            {
+                idConnection = item.ConnectionId;
+                Clients.Client(idConnection).SendMessageRestart(pServiceName);
+            }
+
+        }
+
+
         public string getUserConnected()
         {
             return "Hola MUNDO!";

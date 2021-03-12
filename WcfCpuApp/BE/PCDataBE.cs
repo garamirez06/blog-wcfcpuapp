@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Common;
+using Common.Entidades;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -16,6 +18,7 @@ namespace CpuInfoClient.BE
         double processorUsage;
         ulong ramUsage;
         ulong totalMemoryRAM;
+        ulong memoryAvailable;
         List<ServiceBE> services;
         List<string> addressIp;
         List<HardDiskBE> disk;
@@ -24,6 +27,8 @@ namespace CpuInfoClient.BE
         List<SitesIISBE> iisSites;
         List<ProcessBE> processNode;
         string descriptionServer;
+        string status;
+        DateTime stampTime;
 
         public string MachineName { get => machineName; set => machineName = value; }
         public string Pais { get => pais; set => pais = value; }
@@ -39,5 +44,8 @@ namespace CpuInfoClient.BE
         public string DescriptionServer { get => descriptionServer; set => descriptionServer = value; }
         public List<ServiceBE> Services { get => services; set => services = value; }
         public string ConnectionID { get => connectionID; set => connectionID = value; }
+        public string Status { get => status; set => status = value; }
+        public DateTime StampTime { get => stampTime; set => stampTime = value; }
+        public ulong MemoryAvailable { get => memoryAvailable; set => memoryAvailable = value; }
     }
 }
